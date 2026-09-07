@@ -1,0 +1,182 @@
+{% extends "api/base.html" %}
+{% block title %}Histórico — Pet Paparico{% endblock %}
+{% block content %}
+<div class="min-h-screen bg-slate-50 p-4 sm:p-6 md:p-8">
+<div class="mx-auto max-w-7xl">
+<header class="mb-8">
+<div class="flex flex-col sm:flex-row sm:items-center gap-4">
+<div class="flex items-center gap-4">
+{% if selected_pet and selected_pet.photo %}
+<img src="{{ selected_pet.photo.url }}" alt="{{ selected_pet.name }}" class="h-20 w-20 rounded-3xl object-cover border border-slate-200 shadow-sm">
+{% else %}
+<div class="h-20 w-20 rounded-3xl bg-slate-100 text-slate-500 flex items-center justify-center text-3xl border border-slate-200">🐾</div>
+{% endif %}
+<div>
+<h1 class="text-2xl sm:text-4xl font-extrabold mb-2">Histórico de <span class="text-indigo-600">Atividades</span></h1>
+<p class="text-slate-500 font-medium">Relatório de nutrição.</p>
+</div>
+</div>
+</div>
+</header>
+
+{% include "api/partials/pet_select.html" with label="Selecione o pet" selected_pet=selected_pet pets=pets %}
+
+{% if selected_pet %}
+<div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+<div>
+<p class="text-sm font-bold text-slate-700">Filtro de período</p>
+<p class="text-xs text-slate-400">Mostra apenas histórico do período selecionado.</p>
+</div>
+<div class="flex flex-wrap gap-2">
+<a href="?pet={{ selected_pet.id }}&filter=day" class="px-4 py-2 rounded-full text-xs font-bold transition-all {% if filter_period == 'day' %}bg-indigo-600 text-white{% else %}bg-slate-100 text-slate-700 hover:bg-slate-200{% endif %}">Dia</a>
+<a href="?pet={{ selected_pet.id }}&filter=week" class="px-4 py-2 rounded-full text-xs font-bold transition-all {% if filter_period == 'week' %}bg-indigo-600 text-white{% else %}bg-slate-100 text-slate-700 hover:bg-slate-200{% endif %}">Semana</a>
+<a href="?pet={{ selected_pet.id }}&filter=month" class="px-4 py-2 rounded-full text-xs font-bold transition-all {% if filter_period == 'month' %}bg-indigo-600 text-white{% else %}bg-slate-100 text-slate-700 hover:bg-slate-200{% endif %}">Mês</a>
+<a href="?pet={{ selected_pet.id }}&filter=year" class="px-4 py-2 rounded-full text-xs font-bold transition-all {% if filter_period == 'year' %}bg-indigo-600 text-white{% else %}bg-slate-100 text-slate-700 hover:bg-slate-200{% endif %}">Ano</a>
+<a href="?pet={{ selected_pet.id }}&filter=all" class="px-4 py-2 rounded-full text-xs font-bold transition-all {% if filter_period == 'all' %}bg-indigo-600 text-white{% else %}bg-slate-100 text-slate-700 hover:bg-slate-200{% endif %}">Todos</a>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
+<div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+<p class="text-xs text-slate-400 uppercase tracking-wider font-bold mb-3">Última alimentação</p>
+<p class="text-2xl font-black text-slate-900">{% if last_feeding %}{{ last_feeding.quantity }}g{% else %}—{% endif %}</p>
+<p class="text-sm text-slate-500 mt-2">{% if last_feeding %}{{ last_feeding.timestamp|date:"d/m/Y H:i" }}{% else %}Sem registros{% endif %}</p>
+</div>
+<div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+<p class="text-xs text-slate-400 uppercase tracking-wider font-bold mb-3">Próxima rotina</p>
+<p class="text-2xl font-black text-slate-900">{{ next_schedule_time }}</p>
+<p class="text-sm text-slate-500 mt-2">Agendamentos ativos</p>
+</div>
+<div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+<p class="text-xs text-slate-400 uppercase tracking-wider font-bold mb-3">Consumo em {{ period_name }}</p>
+<p class="text-2xl font-black text-slate-900">{{ period_total }}g</p>
+<p class="text-sm text-slate-500 mt-2">Em {{ period_count }} refeições</p>
+</div>
+</div>
+<div class="grid lg:grid-cols-3 gap-4 mb-8">
+<div class="lg:col-span-2 bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4 text-center sm:text-left">
+<div class="flex-1">
+<p class="text-xs text-slate-400 uppercase tracking-wider font-bold">Distribuição temporal</p>
+<h2 class="text-xl font-black text-slate-900">{% if filter_period == 'month' %}Consumo por semana{% else %}Consumo por dia{% endif %}</h2>
+</div>
+<p class="text-sm text-slate-500 font-medium">Total {{ period_total }}g</p>
+</div>
+<div class="rounded-2xl bg-slate-50 p-4 border border-slate-200">
+{% if feedings_by_day_percent %}
+<div class="relative h-56 rounded-xl bg-gradient-to-b from-white to-slate-50 p-3">
+<div class="absolute inset-x-3 top-3 bottom-3 flex flex-col justify-between">
+<div class="h-px w-full bg-slate-200"></div>
+<div class="h-px w-full bg-slate-200"></div>
+<div class="h-px w-full bg-slate-200"></div>
+</div>
+<div class="relative flex h-full items-end justify-between gap-2 pt-2">
+{% for item in feedings_by_day_percent %}
+<div class="flex-1 flex flex-col items-center gap-2">
+<div class="flex h-40 w-full items-end justify-center rounded-xl bg-slate-100 p-2 shadow-inner">
+<div class="w-full rounded-lg shadow-md" style="height: {{ item.height_pct }}%; min-height: 8px; background: linear-gradient(180deg, {{ item.bar_color_start }} 0%, {{ item.bar_color_end }} 100%);"></div>
+</div>
+<div class="text-center">
+<p class="text-[11px] font-black text-slate-700">{{ item.label }}</p>
+<p class="text-[10px] text-slate-500">{{ item.amount }}g</p>
+</div>
+</div>
+{% endfor %}
+</div>
+</div>
+<div class="mt-4 flex flex-wrap items-center justify-center gap-3 text-[11px] font-semibold text-slate-600">
+{% if filter_period == 'day' %}
+<span class="inline-flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-full" style="background: linear-gradient(180deg, #2563eb 0%, #38bdf8 100%);"></span>Dia</span>
+{% elif filter_period == 'week' %}
+<span class="inline-flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-full" style="background: linear-gradient(180deg, #7c3aed 0%, #d946ef 100%);"></span>Semana</span>
+{% elif filter_period == 'month' %}
+<span class="inline-flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-full" style="background: linear-gradient(180deg, #16a34a 0%, #84cc16 100%);"></span>Mês</span>
+{% elif filter_period == 'year' %}
+<span class="inline-flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-full" style="background: linear-gradient(180deg, #d97706 0%, #f59e0b 100%);"></span>Ano</span>
+{% else %}
+<span class="inline-flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-full" style="background: linear-gradient(180deg, #4f46e5 0%, #818cf8 100%);"></span>Todos</span>
+{% endif %}
+</div>
+{% else %}
+<p class="text-sm text-slate-500">Sem dados de alimentação recentes.</p>
+{% endif %}
+</div>
+</div>
+<div class="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
+<p class="text-xs text-slate-400 uppercase tracking-wider font-bold mb-3">Média de porção</p>
+<p class="text-3xl font-black text-slate-900">{{ period_avg }}g</p>
+<p class="text-sm text-slate-500 mt-2">Baseado nos registros de {{ period_name|lower }}</p>
+</div>
+</div>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+<div class="bg-white p-6 rounded-2xl border border-slate-100"><p class="text-3xl font-black">{{ today_count }}</p><p class="text-xs text-slate-400 font-bold uppercase">Hoje</p></div>
+<div class="bg-white p-6 rounded-2xl border border-slate-100"><p class="text-3xl font-black">{{ total_today }}g</p><p class="text-xs text-slate-400 font-bold uppercase">Consumo diário</p></div>
+<div class="bg-white p-6 rounded-2xl border border-slate-100"><p class="text-3xl font-black">{{ average }}g</p><p class="text-xs text-slate-400 font-bold uppercase">Média</p></div>
+<div class="bg-slate-900 p-6 rounded-2xl text-white"><p class="text-3xl font-black">{{ total_count }}</p><p class="text-xs text-slate-400 font-bold uppercase">Total</p></div>
+</div>
+
+<div class="bg-white rounded-[2rem] border border-slate-100 p-6 shadow-sm space-y-4">
+{% for h in history %}
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-slate-50 rounded-2xl p-5 border border-slate-100">
+<div>
+<p class="font-bold text-lg">{{ h.timestamp|date:"d/m/Y H:i" }}</p>
+<span class="text-[10px] font-black uppercase px-2 py-1 rounded-lg {% if h.feedingType == 'manual' %}bg-indigo-50 text-indigo-600{% else %}bg-amber-50 text-amber-600{% endif %}">
+{{ h.feedingType }}
+</span>
+</div>
+<div class="flex items-center gap-6">
+<p class="text-2xl font-black">{{ h.quantity }}g</p>
+<span class="text-[10px] font-black uppercase px-3 py-1 rounded-xl {% if h.success %}bg-emerald-50 text-emerald-600{% else %}bg-red-50 text-red-600{% endif %}">
+{% if h.success %}Sucesso{% else %}Falha{% endif %}
+</span>
+</div>
+</div>
+{% empty %}
+<p class="text-center text-slate-400 py-12">Nenhum registro.</p>
+{% endfor %}
+
+{% if paginator.num_pages > 1 %}
+<div class="flex flex-wrap items-center justify-center gap-2 pt-4 border-t border-slate-100">
+{% if history.has_previous %}
+<a href="?pet={{ selected_pet.id }}&filter={{ filter_period }}&page=1" class="px-4 py-2 rounded-xl text-sm font-bold transition-all bg-slate-100 text-slate-700 hover:bg-slate-200">
+Primeiro
+</a>
+<a href="?pet={{ selected_pet.id }}&filter={{ filter_period }}&page={{ history.previous_page_number }}" class="px-4 py-2 rounded-xl text-sm font-bold transition-all bg-slate-100 text-slate-700 hover:bg-slate-200">
+Anterior
+</a>
+{% else %}
+<span class="px-4 py-2 rounded-xl text-sm font-bold bg-slate-100 text-slate-400 cursor-not-allowed">Primeiro</span>
+<span class="px-4 py-2 rounded-xl text-sm font-bold bg-slate-100 text-slate-400 cursor-not-allowed">Anterior</span>
+{% endif %}
+<span class="px-4 py-2 text-sm font-bold text-slate-600">
+Página {{ history.number }} de {{ paginator.num_pages }}
+</span>
+{% if history.has_next %}
+<a href="?pet={{ selected_pet.id }}&filter={{ filter_period }}&page={{ history.next_page_number }}" class="px-4 py-2 rounded-xl text-sm font-bold transition-all bg-slate-100 text-slate-700 hover:bg-slate-200">
+Próximo
+</a>
+<a href="?pet={{ selected_pet.id }}&filter={{ filter_period }}&page={{ paginator.num_pages }}" class="px-4 py-2 rounded-xl text-sm font-bold transition-all bg-slate-100 text-slate-700 hover:bg-slate-200">
+Último
+</a>
+{% else %}
+<span class="px-4 py-2 rounded-xl text-sm font-bold bg-slate-100 text-slate-400 cursor-not-allowed">Próximo</span>
+<span class="px-4 py-2 rounded-xl text-sm font-bold bg-slate-100 text-slate-400 cursor-not-allowed">Último</span>
+{% endif %}
+</div>
+{% endif %}
+</div>
+{% else %}
+<div class="text-center bg-white rounded-[2rem] p-12 border border-slate-100">
+<p class="text-5xl mb-4">🕐</p>
+<h2 class="text-xl font-bold mb-2">Selecione um pet para ver o histórico</h2>
+<p class="text-slate-500 mb-6">Escolha um pet cadastrado para acompanhar o consumo, horários de alimentação e o desempenho da rotina.</p>
+<div class="flex flex-wrap justify-center gap-3">
+<a href="{% url 'web_pet_create' %}" class="inline-flex items-center justify-center rounded-2xl bg-indigo-600 px-6 py-3 font-bold text-white hover:bg-indigo-500">Cadastrar pet</a>
+{% if pets %}
+<a href="{% url 'web_pets' %}" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 px-6 py-3 font-bold text-slate-700 hover:bg-slate-50">Ver meus pets</a>
+{% endif %}
+</div>
+</div>
+{% endif %}
+</div>
+</div>
+{% endblock %}

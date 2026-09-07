@@ -1,0 +1,207 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Pet Paparico - Sistema de alimentação inteligente para pets">
+    <title>{% block title %}Pet Paparico{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'api/css/app.css' %}">
+    
+    <!-- Skip Link para acessibilidade -->
+    <style>
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+        
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: #6366f1;
+            color: white;
+            padding: 8px 16px;
+            z-index: 1000000;
+            transition: top 0.3s;
+            font-weight: 600;
+            text-decoration: none;
+            border-radius: 0 0 4px 0;
+        }
+        
+        .skip-link:focus {
+            top: 0;
+        }
+        
+        /* Alto Contraste */
+        body.high-contrast {
+            background: #000000 !important;
+            color: #ffffff !important;
+        }
+        
+        body.high-contrast * {
+            background-color: #000000 !important;
+            color: #ffffff !important;
+            border-color: #ffffff !important;
+        }
+        
+        body.high-contrast a,
+        body.high-contrast button {
+            color: #ffff00 !important;
+        }
+        
+        body.high-contrast a:hover,
+        body.high-contrast button:hover {
+            color: #00ffff !important;
+            text-decoration: underline !important;
+        }
+        
+        body.high-contrast input,
+        body.high-contrast select,
+        body.high-contrast textarea {
+            background: #000000 !important;
+            color: #ffffff !important;
+            border: 2px solid #ffffff !important;
+        }
+        
+        body.high-contrast img {
+            filter: grayscale(100%) contrast(150%);
+        }
+        
+        body.high-contrast .bg-white,
+        body.high-contrast .bg-slate-50,
+        body.high-contrast .bg-slate-100,
+        body.high-contrast .bg-slate-50\/50 {
+            background-color: #000000 !important;
+        }
+        
+        body.high-contrast .text-slate-500,
+        body.high-contrast .text-slate-400,
+        body.high-contrast .text-slate-600 {
+            color: #ffffff !important;
+        }
+        
+        body.high-contrast .border,
+        body.high-contrast .border-slate-100,
+        body.high-contrast .border-slate-200 {
+            border-color: #ffffff !important;
+        }
+        
+        /* Botões de mostrar/ocultar senha */
+        #toggle-login-password,
+        #toggle-register-password,
+        #toggle-register-confirm-password {
+            width: 2.5rem !important;
+            height: auto !important;
+            right: 0.5rem !important;
+            left: auto !important;
+            padding: 0.5rem !important;
+            min-width: fit-content !important;
+            z-index: 10 !important;
+        }
+        
+        #toggle-login-password svg,
+        #toggle-register-password svg,
+        #toggle-register-confirm-password svg {
+            width: 1.25rem !important;
+            height: 1.25rem !important;
+            min-width: 1.25rem !important;
+            flex-shrink: 0 !important;
+        }
+        
+        /* WhatsApp icon green color */
+        a[href*="univesp.br"] svg {
+            color: inherit !important;
+            fill: currentColor !important;
+        }
+        
+        #whatsapp-link {
+            color: #25D366 !important;
+        }
+        
+        #whatsapp-link svg {
+            color: #25D366 !important;
+            fill: #25D366 !important;
+        }
+        
+        #whatsapp-link svg path {
+            fill: #25D366 !important;
+        }
+    </style>
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-900 antialiased">
+    <!-- Skip Link -->
+    <a href="#main-content" class="skip-link">Pular para o conteúdo principal</a>
+    
+    {% if user.is_authenticated and show_nav|default_if_none:True %}
+    <div class="flex min-h-screen w-full min-w-0 overflow-x-hidden">
+        {% include "api/partials/nav.html" %}
+        <main id="main-content" class="min-w-0 flex-1 pb-14 pt-14 md:ml-72 md:pt-4" role="main" aria-label="Conteúdo principal">
+    {% else %}
+    <main id="main-content" class="min-h-screen pt-4" role="main" aria-label="Conteúdo principal">
+    {% endif %}
+
+    {% include "api/partials/messages.html" %}
+    {% block content %}{% endblock %}
+
+    <footer class="border-t border-slate-200 bg-white px-4 py-4 text-center text-sm text-slate-600 md:px-6">
+        <div class="mb-3 flex flex-wrap justify-center gap-3 text-sm">
+            <a href="https://www.youtube.com/@univesptv/courses" target="_blank" rel="noopener noreferrer" class="rounded-full border border-slate-200 px-3 py-1 hover:bg-slate-100 inline-flex items-center gap-2 text-red-600">
+                <span class="inline-flex h-5 w-5 items-center justify-center">
+                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" class="h-4 w-4">
+                        <path d="M23.5 6.3c-.3-1.3-1.3-2.3-2.6-2.6C18.2 3 12 3 12 3s-6.2 0-8.9.7c-1.3.3-2.3 1.3-2.6 2.6C0 8.9 0 12 0 12s0 3.1.5 5.7c.3 1.3 1.3 2.3 2.6 2.6 2.7.7 8.9.7 8.9.7s6.2 0 8.9-.7c1.3-.3 2.3-1.3 2.6-2.6C24 15.1 24 12 24 12s0-3.1-.5-5.7z"/>
+                        <path d="M9.6 16.5V7.5l7.2 4.5-7.2 4.5z" fill="#fff"/>
+                    </svg>
+                </span>
+                <span>YouTube</span>
+            </a>
+            <a href="https://x.com/univesptv" target="_blank" rel="noopener noreferrer" class="rounded-full border border-slate-200 px-3 py-1 hover:bg-slate-100 inline-flex items-center gap-2 text-slate-900">
+                <span class="inline-flex h-5 w-5 items-center justify-center">
+                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" class="h-4 w-4">
+                        <path d="M23.4 4.6c-.4-.6-1.1-.9-1.8-.9-.7 0-1.4.3-1.9.7l-6.8 5.1-6.8-5.1C5.9 3.9 5.2 3.6 4.5 3.6c-.7 0-1.4.3-1.8.9-.5.7-.6 1.6-.1 2.3l4.2 7.3-4.2 7.3c-.5.7-.4 1.6.1 2.3.4.6 1.1.9 1.8.9.7 0 1.4-.3 1.9-.7l6.8-5.1 6.8 5.1c.5.4 1.1.7 1.9.7.7 0 1.4-.3 1.8-.9.5-.7.6-1.6.1-2.3l-4.2-7.3 4.2-7.3c.5-.7.4-1.6-.1-2.3z"/>
+                    </svg>
+                </span>
+                <span>X</span>
+            </a>
+            <a href="https://www.facebook.com/p/UNIVESP-Universidade-Virtual-do-Estado-de-S%C3%A3o-Paulo-100057260186195/" target="_blank" rel="noopener noreferrer" class="rounded-full border border-slate-200 px-3 py-1 hover:bg-slate-100 inline-flex items-center gap-2 text-[#1877F2]">
+                <span class="inline-flex h-5 w-5 items-center justify-center">
+                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" class="h-4 w-4">
+                        <path d="M22.7 0H1.3C.6 0 0 .6 0 1.3v21.4C0 23.4.6 24 1.3 24h11.5V14.7h-3.1v-3.6h3.1V8.3c0-3.1 1.9-4.8 4.7-4.8 1.3 0 2.4.1 2.7.2v3h-1.8c-1.4 0-1.7.7-1.7 1.6v2.1h3.4l-.4 3.6h-3v9.3h5.8c.7 0 1.3-.6 1.3-1.3V1.3c0-.7-.6-1.3-1.3-1.3z"/>
+                    </svg>
+                </span>
+                <span>Facebook</span>
+            </a>
+            <a href="https://www.univesp.br/" target="_blank" rel="noopener noreferrer" id="whatsapp-link" class="rounded-full border border-slate-200 px-3 py-1 hover:bg-slate-100 inline-flex items-center gap-2 text-[#25D366]">
+                <span class="inline-flex h-5 w-5 items-center justify-center">
+                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" class="h-4 w-4">
+                        <path d="M12.002 0C5.375 0 0 5.375 0 12c0 2.025.53 3.926 1.45 5.573L0 24l6.678-1.445C8.27 23.417 10.105 24 12.002 24 18.63 24 24 18.625 24 12c0-6.625-5.37-12-11.998-12zm0 22.04c-1.74 0-3.42-.445-4.875-1.285l-.35-.205-3.965.858.84-3.868-.225-.375A9.95 9.95 0 0 1 1.998 12c0-5.52 4.48-10 10.003-10 5.52 0 10 4.48 10 10 0 5.523-4.48 10-10 10zm5.368-7.728c-.24-.12-1.42-.7-1.64-.78-.22-.08-.38-.12-.54.12-.17.24-.7.78-.85.94-.16.16-.31.18-.57.06-.25-.12-1.05-.39-2-1.23-.74-.66-1.24-1.48-1.39-1.73-.15-.25-.02-.38.11-.5.11-.12.24-.31.36-.47.12-.16.16-.27.25-.45.08-.18.04-.34-.02-.47-.06-.12-.54-1.3-.74-1.78-.2-.47-.4-.41-.55-.42-.14-.01-.3-.01-.46-.01-.16 0-.42.06-.64.29-.22.24-.84.82-.84 2 0 1.18.86 2.32.98 2.48.12.16 1.7 2.6 4.13 3.64.58.25 1.03.4 1.38.51.58.18 1.11.15 1.53.09.47-.07 1.42-.58 1.62-1.15.2-.56.2-1.04.14-1.15-.05-.12-.2-.18-.42-.3z"/>
+                    </svg>
+                </span>
+                <span>WhatsApp</span>
+            </a>
+        </div>
+        <p>© 2026 Pet Paparico - Desenvolvido por ALUNOS UNIVESP PJI VI - Engenharia da Computação</p>
+    </footer>
+
+    {% if user.is_authenticated and show_nav|default_if_none:True %}
+        </main>
+    </div>
+    {% else %}
+    </main>
+    {% endif %}
+    
+    <!-- Acessibilidade -->
+    {% include "api/partials/accessibility.html" %}
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

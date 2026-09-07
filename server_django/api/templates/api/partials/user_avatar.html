@@ -1,0 +1,10 @@
+{# Avatar do tutor: foto ou inicial. Variáveis: size_class (opcional), link_url (opcional) #}
+{% with size=size_class|default:"h-10 w-10" %}
+{% if link_url %}<a href="{{ link_url }}" class="flex {{ size }} shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-indigo-100 font-bold text-indigo-700 shadow-sm transition-transform hover:scale-105">{% else %}<span class="flex {{ size }} shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-indigo-100 font-bold text-indigo-700 shadow-sm">{% endif %}
+{% if user_photo_url %}
+<img src="{{ user_photo_url }}" alt="{{ display_name }}" class="h-full w-full object-cover">
+{% else %}
+<span class="text-sm">{{ user_initial }}</span>
+{% endif %}
+{% if link_url %}</a>{% else %}</span>{% endif %}
+{% endwith %}

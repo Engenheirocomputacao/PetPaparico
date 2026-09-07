@@ -1,0 +1,100 @@
+{% extends "api/base.html" %}
+{% block title %}Calibrar Servo — Pet Paparico{% endblock %}
+{% block content %}
+<div class="min-h-screen bg-slate-50 p-4 sm:p-6 md:p-8">
+<div class="mx-auto max-w-3xl">
+<header class="mb-8">
+<div class="flex items-center gap-4 mb-4">
+<a href="{% url 'web_device' %}" class="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 rounded-lg border-2 border-slate-200 font-bold transition-all hover:border-indigo-300 hover:text-indigo-600">
+<span>←</span>
+<span>Voltar</span>
+</a>
+</div>
+<span class="inline-block bg-violet-100 text-violet-700 text-xs font-bold uppercase px-3 py-1 rounded-full mb-3">IoT</span>
+<h1 class="text-3xl sm:text-4xl font-black">Calibrar Servo Motor</h1>
+<p class="text-slate-500 mt-2">Ajuste a posição do servo para o dispensador</p>
+</header>
+
+{% if messages %}
+<div class="mb-6 space-y-3">
+{% for message in messages %}
+<div class="p-4 rounded-2xl border-2 {% if message.tags == 'success' %}bg-emerald-50 border-emerald-200 text-emerald-800{% elif message.tags == 'error' %}bg-rose-50 border-rose-200 text-rose-800{% else %}bg-blue-50 border-blue-200 text-blue-800{% endif %}">
+<p class="font-bold">{{ message }}</p>
+</div>
+{% endfor %}
+</div>
+{% endif %}
+
+<div class="bg-white rounded-[2rem] border border-slate-100 p-6 shadow-sm">
+<div class="mb-6">
+<div class="flex items-center gap-3 mb-4">
+<div class="w-3 h-3 rounded-full {% if is_online %}bg-emerald-500{% else %}bg-rose-500{% endif %}"></div>
+<p class="font-bold {% if is_online %}text-emerald-600{% else %}text-rose-600{% endif %}">
+{% if is_online %}ESP32 Online{% else %}ESP32 Offline{% endif %}
+</p>
+</div>
+</div>
+
+<form method="post" class="space-y-6">
+{% csrf_token %}
+
+<div>
+<label class="text-sm font-bold text-slate-700 uppercase tracking-wider mb-3 block">
+Posição do Servo (0° a 90°)
+</label>
+<div class="space-y-4">
+<input type="range" id="positionSlider" name="position" min="0" max="90" step="45" value="0" 
+       class="w-full accent-indigo-600" oninput="updatePosition(this.value)">
+<div class="flex justify-between text-xs text-slate-500 font-bold">
+<span>0° (Fechado)</span>
+<span>45° (50% aberto)</span>
+<span>90° (Aberto)</span>
+</div>
+</div>
+</div>
+
+<div class="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl p-6 border-2 border-indigo-200">
+<div class="text-center">
+<p class="text-xs font-bold text-indigo-600 uppercase tracking-wider mb-2">Posição Atual</p>
+<p class="text-6xl font-black text-indigo-600" id="positionDisplay">0°</p>
+</div>
+</div>
+
+<button type="submit" 
+        class="w-full bg-indigo-600 text-white rounded-2xl py-4 font-bold hover:bg-indigo-500 transition-all {% if not is_online %}opacity-50 cursor-not-allowed{% endif %}"
+        {% if not is_online %}disabled{% endif %}>
+{% if is_online %}
+🔧 Calibrar Servo
+{% else %}
+ESP32 Offline
+{% endif %}
+</button>
+</form>
+</div>
+
+<div class="mt-6 bg-blue-50 rounded-2xl p-6 border-2 border-blue-200">
+<h3 class="font-bold text-blue-900 mb-3">ℹ️ Dicas de Calibração</h3>
+<ul class="space-y-2 text-sm text-blue-800">
+<li class="flex items-start gap-2">
+<span class="font-bold">•</span>
+<span><strong>0°:</strong> Servo totalmente fechado (sem dispensar)</span>
+</li>
+<li class="flex items-start gap-2">
+<span class="font-bold">•</span>
+<span><strong>45°:</strong> Abertura parcial (50% aberto)</span>
+</li>
+<li class="flex items-start gap-2">
+<span class="font-bold">•</span>
+<span><strong>90°:</strong> Abertura total (porção completa)</span>
+</li>
+</ul>
+</div>
+</div>
+</div>
+
+<script>
+function updatePosition(value) {
+    document.getElementById('positionDisplay').textContent = value + '°';
+}
+</script>
+{% endblock %}

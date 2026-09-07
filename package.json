@@ -1,0 +1,16 @@
+{
+  "name": "pet_feeder_app",
+  "version": "2.0.0",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "start": "./start.sh",
+    "migrate": "cd server_django && ../.venv/bin/python3 manage.py migrate",
+    "format": "prettier --write server_django"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.3.0",
+    "prettier": "^3.6.2",
+    "tailwindcss": "^4.3.0"
+  }
+}

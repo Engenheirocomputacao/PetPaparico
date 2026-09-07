@@ -1,0 +1,99 @@
+{% extends "api/base.html" %}
+{% block title %}Pet Paparico — Alimentador Inteligente{% endblock %}
+
+{% block content %}
+<div class="min-h-screen relative flex flex-col items-center justify-center overflow-hidden">
+    <div class="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
+         style="background-image: url('https://images.unsplash.com/photo-1583337130417-3346a1be7dee?auto=format&fit=crop&q=80&w=1920');"></div>
+    <div class="absolute inset-0 z-10 bg-gradient-to-br from-indigo-900/90 via-slate-900/80 to-indigo-900/90"></div>
+
+    <div class="relative z-20 text-center px-4 max-w-4xl py-16">
+        <div class="mb-6 inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full border border-white/20 text-white/90 text-sm font-medium">
+            <span class="relative flex h-2 w-2">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            Alimentador inteligente para pets
+        </div>
+
+        <h1 class="text-4xl sm:text-6xl md:text-8xl font-extrabold text-white mb-6 tracking-tight">
+            PET<span class="text-indigo-400">PAPARICO</span>
+        </h1>
+        <p class="text-xl md:text-2xl text-slate-200 mb-10 font-medium leading-relaxed max-w-2xl mx-auto">
+            A tecnologia que seu pet merece. Alimentação inteligente, monitoramento real e carinho à distância.
+        </p>
+
+        <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <a href="{% url 'web_login' %}"
+               class="bg-indigo-600 hover:bg-indigo-500 text-white text-lg px-10 py-4 rounded-2xl shadow-2xl shadow-indigo-500/20 font-bold transition-all hover:-translate-y-1">
+                COMEÇAR AGORA →
+            </a>
+            <button type="button" onclick="document.getElementById('features-modal').showModal()"
+                    class="text-white hover:bg-white/10 text-lg px-10 py-4 rounded-2xl backdrop-blur-sm border border-white/10 font-medium transition-all">
+                CONHECER RECURSOS
+            </button>
+        </div>
+    </div>
+
+    <div class="absolute bottom-12 left-0 right-0 z-20 hidden md:flex justify-center gap-12 text-white/60 text-sm font-medium">
+        <div class="flex flex-col items-center gap-1"><span class="text-white text-xl font-bold">10k+</span> Pets Felizes</div>
+        <div class="flex flex-col items-center gap-1"><span class="text-white text-xl font-bold">24/7</span> Monitoramento</div>
+        <div class="flex flex-col items-center gap-1"><span class="text-white text-xl font-bold">100%</span> Seguro</div>
+    </div>
+</div>
+
+<dialog id="features-modal" class="backdrop:bg-black/70 rounded-[2rem] max-w-3xl w-[95vw] p-0 border-0 shadow-2xl open:flex open:flex-col max-h-[90vh]">
+    <div class="bg-gradient-to-r from-indigo-600 to-violet-600 p-6 flex justify-between items-start gap-4">
+        <div>
+            <h2 class="text-2xl font-black text-white">Recursos do Pet Paparico</h2>
+            <p class="text-indigo-100 font-medium">Tudo que você precisa para cuidar do seu pet com mais tranquilidade</p>
+        </div>
+        <button type="button" onclick="document.getElementById('features-modal').close()"
+                class="text-white bg-white/20 hover:bg-white/30 rounded-full w-10 h-10 font-bold">✕</button>
+    </div>
+    <div class="overflow-y-auto p-6 bg-white space-y-5 text-sm text-slate-700">
+        <div class="rounded-2xl border border-slate-100 bg-slate-50 p-5">
+            <p class="font-black text-slate-900 mb-3 text-base">📋 Cadastro Completo e Inteligente do Pet</p>
+            <p class="leading-relaxed mb-2">Crie um perfil detalhado para cada um de seus pets com informações como nome, espécie, raça, peso, idade e notas pessoais. O sistema armazena fotos de alta qualidade e permite que você acompanhe o histórico de características físicas do seu animal ao longo do tempo.</p>
+            <p class="text-xs text-slate-500 font-medium">💾 <strong>Tecnologia:</strong> Banco de dados PostgreSQL com suporte a uploads de mídia otimizados | 🔐 <strong>Segurança:</strong> Dados criptografados e backup automático</p>
+        </div>
+
+        <div class="rounded-2xl border border-slate-100 bg-slate-50 p-5">
+            <p class="font-black text-slate-900 mb-3 text-base">🍽️ Alimentação Manual, Agendada e Inteligente</p>
+            <p class="leading-relaxed mb-2">Controle total sobre as refeições do seu pet. Alimente manualmente em qualquer hora com porções em gramas, configure agendamentos automáticos por horários específicos (matutino, vespertino, noturno) e escolha a frequência desejada (diária, dias úteis, fins de semana). O sistema permite múltiplos pets com reservatórios independentes, cada um com sua própria dosagem.</p>
+            <p class="text-xs text-slate-500 font-medium">⚙️ <strong>Hardware:</strong> Servo motor de precisão controlado via ESP32 WROOM-32D | 📡 <strong>Comunicação:</strong> APIs RESTful com sincronização em tempo real | 📊 <strong>Precisão:</strong> Dispensador calibrável para porções de 10g a 500g</p>
+        </div>
+
+        <div class="rounded-2xl border border-slate-100 bg-slate-50 p-5">
+            <p class="font-black text-slate-900 mb-3 text-base">📊 Histórico Inteligente e Análise de Comportamento</p>
+            <p class="leading-relaxed mb-2">Acompanhe cada refeição realizada com timestamp preciso, identifique padrões de alimentação e hábitos do seu pet. Visualize gráficos de frequência, quantidade consumida por período e tendências ao longo de semanas e meses. Essas informações são fundamentais para detectar mudanças no comportamento e alimentação que possam indicar problemas de saúde.</p>
+            <p class="text-xs text-slate-500 font-medium">📈 <strong>Análise:</strong> Gráficos dinâmicos com filtros por período (dia, semana, mês, ano) | 🧮 <strong>Estatísticas:</strong> Média de refeições, quantidade total dispensada, frequência e padrões | 📱 <strong>Visualização:</strong> Interface responsiva com suporte a múltiplos dispositivos</p>
+        </div>
+
+        <div class="rounded-2xl border border-slate-100 bg-slate-50 p-5">
+            <p class="font-black text-slate-900 mb-3 text-base">🎥 Monitoramento em Tempo Real e Controle do Dispositivo</p>
+            <p class="leading-relaxed mb-2">Monitore continuamente o estado completo do dispensador: nível de ração em percentual, status de conexão (online/offline), nível de bateria, sinal WiFi (RSSI) e temperatura do ambiente. Integre câmeras RTSP para visualizar o local onde seu pet se alimenta. Teste a conexão do ESP32 e calibre manualmente o servo motor para garantir precisão nas dispensações.</p>
+            <p class="text-xs text-slate-500 font-medium">📡 <strong>Hardware:</strong> ESP32 WROOM-32D com WiFi integrado e suporte a múltiplos sensores | 🎥 <strong>Câmeras:</strong> Compatível com feeds RTSP (IP cameras, webcams, baby monitors) | 🔧 <strong>Ferramentas:</strong> Interface de calibração em tempo real com visualização do servo motor | ⚡ <strong>Status:</strong> Atualizações contínuas do estado do dispositivo</p>
+        </div>
+
+        <div class="rounded-2xl border border-slate-100 bg-slate-50 p-5">
+            <p class="font-black text-slate-900 mb-3 text-base">🔔 Sistema Inteligente de Notificações e Avisos Personalizados</p>
+            <p class="leading-relaxed mb-2">Receba notificações automáticas para eventos importantes: quando a alimentação é completada com sucesso, quando o nível de ração cai abaixo do limite configurado, quando o dispositivo fica offline, ou lembretes personalizados. Configure preferências por tipo de notificação (email, push notifications) e defina thresholds de ração que façam sentido para seu pet.</p>
+            <p class="text-xs text-slate-500 font-medium">📧 <strong>Canais:</strong> Email e notificações push inteligentes (configuráveis por tipo) | 🎯 <strong>Customização:</strong> Defina limiares de ração baixa e tipos de eventos | ⏰ <strong>Confiabilidade:</strong> Notificações garantidas com registro de entrega | 🚨 <strong>Urgência:</strong> Alertas prioritários para problemas críticos (offline, ração baixa)</p>
+        </div>
+
+        <div class="rounded-2xl border border-indigo-100 bg-indigo-50 p-5">
+            <p class="font-black text-indigo-900 mb-3 text-base">♿ Acessibilidade Inclusiva e Conformidade WCAG</p>
+            <p class="leading-relaxed mb-2">Desenvolvido com preocupação genuína na inclusão. A interface foi construída seguindo as diretrizes WCAG 2.1 nível AA para acessibilidade web, conta com suporte a leitores de tela (NVDA, JAWS), navegação por teclado completa, contraste adequado entre cores, e foi testado com usuários reais que possuem diferentes necessidades.</p>
+            <p class="text-xs text-slate-500 font-medium">🧑‍🦯 <strong>Conformidade:</strong> WCAG 2.1 AA (Web Content Accessibility Guidelines) | 🗣️ <strong>Linguagem:</strong> Suporte a leitura de tela e navegação por teclado | 🎨 <strong>Design:</strong> Contraste elevado, texto ampliável, modo escuro | 📖 <strong>Documentação:</strong> Guia de acessibilidade e compatibilidade com tecnologias assistivas</p>
+        </div>
+
+        <div class="rounded-2xl border border-emerald-100 bg-emerald-50 p-5 mt-4">
+            <p class="font-black text-emerald-900 mb-2 text-sm">🚀 STACK TECNOLÓGICO</p>
+            <p class="text-xs text-emerald-700 leading-relaxed"><strong>Backend:</strong> Django 6.0.4 com Django REST Framework para APIs robustas | <strong>Banco:</strong> PostgreSQL com ORM Django para integridade de dados | <strong>Frontend:</strong> HTML5, Tailwind CSS e JavaScript vanilla para performance | <strong>Hardware:</strong> ESP32 WROOM-32D com firmware em C++ | <strong>Deployment:</strong> Preparado para produção com HTTPS, CORS configurado e rate limiting</p>
+        </div>
+
+        <a href="{% url 'web_register' %}" class="block text-center mt-4 bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-bold py-4 rounded-2xl hover:from-indigo-500 hover:to-violet-500 shadow-lg shadow-indigo-500/30 transition-all">✨ Criar minha conta e começar agora</a>
+    </div>
+</dialog>
+{% endblock %}

@@ -1,0 +1,1090 @@
+{% extends "api/base.html" %}
+
+{% block title %}ESP32 - Simulação do Alimentador{% endblock %}
+
+{% block extra_head %}
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        .simulator-page-root {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: calc(100vh - 4rem);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 30px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 900px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 40px;
+            font-size: 0.9em;
+        }
+
+        .esp32-simulator {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .esp32-simulator {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .esp32-board {
+            background: #1a1a2e;
+            border-radius: 20px;
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+            min-height: 400px;
+        }
+
+        .esp32-board::before {
+            content: 'ESP32_WROOM_32D';
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 10px;
+            color: #666;
+            font-family: monospace;
+            letter-spacing: 2px;
+        }
+
+        .board-title {
+            color: #fff;
+            font-size: 1.3em;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-led {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #4ade80;
+            box-shadow: 0 0 10px #4ade80;
+            animation: pulse 2s infinite;
+        }
+
+        .status-led.offline {
+            background: #ef4444;
+            box-shadow: 0 0 10px #ef4444;
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .servo-motor {
+            background: #16213e;
+            border: 2px solid #0f3460;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .servo-label {
+            color: #94a3b8;
+            font-size: 0.75em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .servo-visual {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 15px;
+            position: relative;
+        }
+
+        .servo-base {
+            width: 60px;
+            height: 60px;
+            background: #3b82f6;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 3px solid #1e40af;
+        }
+
+        .servo-arm {
+            width: 8px;
+            height: 40px;
+            background: #e5e7eb;
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform-origin: bottom center;
+            transform: translateX(-50%) rotate(0deg);
+            border-radius: 4px;
+            transition: transform 0.5s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        .servo-arm.dispensing {
+            transform: translateX(-50%) rotate(90deg);
+        }
+
+        .servo-channel-info {
+            margin-top: 16px;
+            color: #cbd5e1;
+            font-size: 0.9em;
+            font-family: monospace;
+            text-align: center;
+            letter-spacing: 0.02em;
+        }
+
+        .servo-channels {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .servo-channel-card {
+            background: #0f172a;
+            border: 2px solid #1e293b;
+            border-radius: 16px;
+            padding: 14px;
+            color: #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .servo-channel-card.active {
+            border-color: #38bdf8;
+            background: linear-gradient(180deg, rgba(56,189,248,0.15), #0f172a);
+            box-shadow: 0 0 18px rgba(56,189,248,0.2);
+        }
+
+        .servo-channel-card.dispensing {
+            animation: pulseChannel 1.4s infinite;
+        }
+
+        @keyframes pulseChannel {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-3px); }
+        }
+
+        .servo-channel-card h3 {
+            margin: 0;
+            font-size: 0.95em;
+            color: #7dd3fc;
+        }
+
+        .servo-channel-card span {
+            font-size: 0.9em;
+            color: #cbd5e1;
+        }
+
+        .channel-food-level {
+            margin: 8px 0;
+            position: relative;
+            height: 20px;
+            background: #1e293b;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid #475569;
+        }
+
+        .channel-food-level .food-bar {
+            height: 100%;
+            background: linear-gradient(to right, #10b981, #34d399);
+            transition: width 0.5s ease;
+        }
+
+        .channel-food-level .food-percentage {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 0.7em;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .servo-angle {
+            color: #60a5fa;
+            font-size: 0.85em;
+            font-family: monospace;
+        }
+
+        .food-container {
+            background: #16213e;
+            border: 2px solid #0f3460;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .container-label {
+            color: #94a3b8;
+            font-size: 0.75em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .container-visual {
+            width: 60px;
+            height: 100px;
+            margin: 0 auto 15px;
+            background: #1e293b;
+            border: 2px solid #475569;
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .food-level {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, #d97706, #f59e0b);
+            transition: height 0.5s ease;
+        }
+
+        .food-level::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: radial-gradient(#fbbf24 1px, transparent 1px);
+            background-size: 6px 6px;
+            opacity: 0.3;
+        }
+
+        .food-percentage {
+            color: #f59e0b;
+            font-size: 0.85em;
+            font-family: monospace;
+        }
+
+        .control-panel {
+            background: #f8fafc;
+            border-radius: 20px;
+            padding: 30px;
+        }
+
+        .selected-pet-avatar {
+            width: 72px;
+            height: 72px;
+            min-width: 72px;
+            min-height: 72px;
+            border-radius: 24px;
+            overflow: hidden;
+            background: #eef2ff;
+            display: grid;
+            place-items: center;
+        }
+
+        .selected-pet-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .selected-pet-avatar-fallback {
+            font-size: 1.75rem;
+        }
+
+        .panel-title {
+            color: #333;
+            font-size: 1.3em;
+            margin-bottom: 25px;
+            font-weight: bold;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .status-item {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .status-label {
+            font-size: 0.75em;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        .status-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #1e293b;
+            font-family: monospace;
+        }
+
+        .dispense-btn {
+            width: 100%;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            margin-bottom: 15px;
+        }
+
+        .dispense-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .dispense-btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .dispense-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .refill-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+        }
+
+        .refill-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6);
+        }
+
+        .dispensing-animation {
+            position: absolute;
+            bottom: -80px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: none;
+        }
+
+        .dispensing-animation.active {
+            display: block;
+        }
+
+        .food-particle {
+            width: 8px;
+            height: 8px;
+            background: #f59e0b;
+            border-radius: 50%;
+            position: absolute;
+            animation: fall 1s ease-in infinite;
+        }
+
+        .food-particle:nth-child(1) { left: -10px; animation-delay: 0s; }
+        .food-particle:nth-child(2) { left: 0px; animation-delay: 0.2s; }
+        .food-particle:nth-child(3) { left: 10px; animation-delay: 0.4s; }
+
+        @keyframes fall {
+            0% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(80px);
+                opacity: 0;
+            }
+        }
+
+        .log-console {
+            background: #0f172a;
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 20px;
+            max-height: 150px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.85em;
+        }
+
+        .log-entry {
+            color: #94a3b8;
+            margin-bottom: 5px;
+            padding: 3px 0;
+        }
+
+        .log-entry.success {
+            color: #4ade80;
+        }
+
+        .log-entry.error {
+            color: #ef4444;
+        }
+
+        .log-entry.info {
+            color: #60a5fa;
+        }
+
+        .log-entry.warning {
+            color: #fbbf24;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="simulator-page-root" aria-labelledby="simulator-title">
+        <div class="container" aria-labelledby="simulator-title">
+            <div class="mb-6">
+                <a href="{% url 'web_device' %}" class="inline-flex items-center gap-2 px-6 py-3 bg-white hover:bg-slate-50 text-slate-700 rounded-xl border-2 border-slate-200 font-bold transition-all hover:border-indigo-300 hover:text-indigo-600" aria-label="Voltar para a página do dispositivo">
+                    <span class="text-xl" aria-hidden="true">←</span>
+                    <span>Voltar para Dispositivo</span>
+                </a>
+            </div>
+
+        <h1 id="simulator-title">🎮 Dispenser - IOT</h1>
+        <p class="subtitle">Controle e visualize o alimentador de pets em tempo real</p>
+
+        <section class="esp32-simulator" aria-label="Painel de simulação do ESP32">
+            <article class="esp32-board" aria-labelledby="board-title" role="region">
+                <div class="mb-6 p-4 bg-slate-800/50 rounded-xl border border-slate-700">
+                    <label for="petSelector" class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">Selecionar Pet</label>
+                    <select id="petSelector" onchange="changePet()" class="w-full bg-slate-900 text-white border border-slate-600 rounded-lg px-4 py-3 font-bold focus:border-indigo-500 focus:outline-none" aria-label="Selecionar pet para simulação">
+                        <option value="">Carregando pets...</option>
+                    </select>
+                </div>
+
+                <div class="board-title" id="board-title">
+                    <div class="status-led" id="statusLed"></div>
+                    <span>ESP32 Dispenser</span>
+                </div>
+
+                <div class="servo-motor" role="group" aria-labelledby="servo-label">
+                    <div class="servo-label" id="servo-label">Servo Motor</div>
+                    <div class="servo-visual" aria-hidden="true">
+                        <div class="servo-base"></div>
+                        <div class="servo-arm" id="servoArm"></div>
+                        <div class="dispensing-animation" id="dispensingAnim">
+                            <div class="food-particle"></div>
+                            <div class="food-particle"></div>
+                            <div class="food-particle"></div>
+                        </div>
+                    </div>
+                    <div class="servo-angle" id="servoAngle">0° (Fechado)</div>
+                    <div class="servo-channel-info" id="servoChannelInfo">Canal ativo: —</div>
+                </div>
+
+                <div class="servo-channels" id="servoChannels" role="group" aria-label="Status dos canais do servo">
+                    <div class="servo-channel-card" data-channel="0">
+                        <h3>Dispensador 1</h3>
+                        <span>Porta D18</span>
+                        <div class="channel-food-level">
+                            <div class="food-bar" id="foodBar0" style="width: 85%"></div>
+                            <span class="food-percentage" id="foodLevel0">85%</span>
+                        </div>
+                        <span class="channel-status">Ocioso</span>
+                    </div>
+                    <div class="servo-channel-card" data-channel="1">
+                        <h3>Dispensador 2</h3>
+                        <span>Porta D21</span>
+                        <div class="channel-food-level">
+                            <div class="food-bar" id="foodBar1" style="width: 60%"></div>
+                            <span class="food-percentage" id="foodLevel1">60%</span>
+                        </div>
+                        <span class="channel-status">Ocioso</span>
+                    </div>
+                    <div class="servo-channel-card" data-channel="2">
+                        <h3>Dispensador 3</h3>
+                        <span>Porta D22</span>
+                        <div class="channel-food-level">
+                            <div class="food-bar" id="foodBar2" style="width: 100%"></div>
+                            <span class="food-percentage" id="foodLevel2">100%</span>
+                        </div>
+                        <span class="channel-status">Ocioso</span>
+                    </div>
+                    <div class="servo-channel-card" data-channel="3">
+                        <h3>Dispensador 4</h3>
+                        <span>Porta D23</span>
+                        <div class="channel-food-level">
+                            <div class="food-bar" id="foodBar3" style="width: 30%"></div>
+                            <span class="food-percentage" id="foodLevel3">30%</span>
+                        </div>
+                        <span class="channel-status">Ocioso</span>
+                    </div>
+                    <div class="servo-channel-card" data-channel="4">
+                        <h3>Dispensador 5</h3>
+                        <span>Porta D25</span>
+                        <div class="channel-food-level">
+                            <div class="food-bar" id="foodBar4" style="width: 75%"></div>
+                            <span class="food-percentage" id="foodLevel4">75%</span>
+                        </div>
+                        <span class="channel-status">Ocioso</span>
+                    </div>
+                </div>
+
+                <div class="food-container" role="group" aria-labelledby="food-label">
+                    <div class="container-label" id="food-label">Reservatório Atual</div>
+                    <div class="container-visual" aria-hidden="true">
+                        <div class="food-level" id="foodLevel" style="height: 85%"></div>
+                    </div>
+                    <div class="food-percentage" id="foodPercentage">85%</div>
+                </div>
+            </article>
+
+            <aside class="control-panel" aria-labelledby="control-panel-title" role="region">
+                <div class="panel-title" id="control-panel-title">📊 Painel de Controle</div>
+
+                <div class="mb-4 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl border-2 border-indigo-200" role="group" aria-labelledby="selected-pet-label">
+                    <div class="flex items-center gap-4">
+                        <div class="selected-pet-avatar" aria-hidden="true">
+                            <span class="selected-pet-avatar-fallback">🐾</span>
+                            <img id="selectedPetImage" src="" alt="Pet selecionado" class="hidden rounded-2xl object-cover" />
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-indigo-600 uppercase tracking-wider" id="selected-pet-label">Pet Selecionado</p>
+                            <p class="text-lg font-black text-slate-900" id="selectedPetName">Selecione um pet para começar</p>
+                            <p class="text-sm text-slate-500 mt-1" id="selectedPetChannel">Canal: —</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="status-grid">
+                    <div class="status-item" role="group" aria-labelledby="status-label-1">
+                        <div class="status-label" id="status-label-1">Status</div>
+                        <div class="status-value" id="deviceStatus" style="color: #10b981;">Online</div>
+                    </div>
+                    <div class="status-item" role="group" aria-labelledby="status-label-2">
+                        <div class="status-label" id="status-label-2">Ração</div>
+                        <div class="status-value" id="foodLevelValue">85%</div>
+                    </div>
+                    <div class="status-item" role="group" aria-labelledby="status-label-3">
+                        <div class="status-label" id="status-label-3">Bateria</div>
+                        <div class="status-value" id="batteryLevel">92%</div>
+                    </div>
+                    <div class="status-item" role="group" aria-labelledby="status-label-4">
+                        <div class="status-label" id="status-label-4">WiFi</div>
+                        <div class="status-value" id="wifiRssi">-45 dBm</div>
+                    </div>
+                </div>
+
+                <button class="dispense-btn" id="dispenseBtn" onclick="dispenseFood()" aria-label="Dispensar ração para o pet selecionado">
+                    <span aria-hidden="true">🍽️</span> DISPENSAR RAÇÃO
+                </button>
+
+                <button class="refill-btn" onclick="refillContainer()" aria-label="Reabastecer o reservatório de ração">
+                    <span aria-hidden="true">📦</span> REABASTECER RESERVATÓRIO
+                </button>
+
+                <div class="log-console" id="logConsole" aria-live="polite" aria-label="Registro de eventos do simulador"></div>
+            </aside>
+                </section>
+            </div>
+        </div>
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+        let currentFoodLevel = 85;
+        let isDispensing = false;
+        let petId = null;
+        let petsList = [];
+        let activeFeedChannel = null;
+
+        const API_BASE = '/api';
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const petIdFromUrl = urlParams.get('pet');
+        if (petIdFromUrl) {
+            petId = parseInt(petIdFromUrl);
+        }
+
+        function getCSRFToken() {
+            const name = 'csrftoken=';
+            const decodedCookie = decodeURIComponent(document.cookie);
+            const cookies = decodedCookie.split(';');
+            for (let cookie of cookies) {
+                cookie = cookie.trim();
+                if (cookie.indexOf(name) === 0) {
+                    return cookie.substring(name.length);
+                }
+            }
+            return null;
+        }
+
+        async function loadStatus() {
+            try {
+                // Carregar status de todos os canais
+                const allStatus = {};
+                for (let channel = 0; channel < 5; channel++) {
+                    try {
+                        const response = await fetch(`${API_BASE}/device/status/?channel=${channel}`);
+                        if (response.ok) {
+                            const statusData = await response.json();
+                            allStatus[channel] = statusData;
+                            updateChannelUI(channel, statusData);
+                        }
+                    } catch (channelError) {
+                        console.error(`Erro ao carregar canal ${channel}:`, channelError);
+                    }
+                }
+
+                // Atualizar status do canal atual (se pet selecionado)
+                const selectedPet = petsList.find(p => p.id === petId);
+                const currentChannel = selectedPet ? selectedPet.dispenser_channel : 0;
+                
+                if (allStatus[currentChannel]) {
+                    currentFoodLevel = allStatus[currentChannel].food_level || 85;
+                    updateUI(allStatus[currentChannel]);
+                }
+
+                const petsResponse = await fetch(`${API_BASE}/pets/`);
+                if (!petsResponse.ok) {
+                    if (petsResponse.status === 401 || petsResponse.status === 403) {
+                        setPetSelectorMessage('Faça login para ver seus pets');
+                    } else {
+                        setPetSelectorMessage('Não foi possível carregar os pets');
+                    }
+                    throw new Error(`Erro ao carregar pets (${petsResponse.status})`);
+                }
+
+                const petsData = await petsResponse.json();
+                if (petsData && petsData.length > 0) {
+                    petsList = petsData;
+                    populatePetSelector(petsData);
+                    if (petId) {
+                        document.getElementById('petSelector').value = petId;
+                        const selectedPet = petsData.find(p => p.id === petId);
+                        if (selectedPet) {
+                            addLog(`🐾 Pet selecionado: ${selectedPet.name} (ID: ${petId})`, 'info');
+                            updateUI(allStatus[currentChannel] || {});
+                        }
+                    } else {
+                        petId = petsData[0].id;
+                        document.getElementById('petSelector').value = petId;
+                        addLog(`🐾 Pet selecionado: ${petsData[0].name} (ID: ${petsData[0].id})`, 'info');
+                        updateUI(allStatus[currentChannel] || {});
+                    }
+                } else {
+                    setPetSelectorMessage('Nenhum pet cadastrado');
+                    addLog('⚠️ Nenhum pet cadastrado', 'error');
+                }
+                addLog('📊 Status atualizado', 'info');
+            } catch (error) {
+                setPetSelectorMessage('Erro ao carregar pets');
+                addLog('⚠️ Erro ao carregar dados: ' + error.message, 'error');
+            }
+        }
+
+        function updateChannelUI(channel, statusData) {
+            const foodBar = document.getElementById(`foodBar${channel}`);
+            const foodLevel = document.getElementById(`foodLevel${channel}`);
+            
+            if (foodBar && foodLevel && statusData) {
+                const foodLevelValue = statusData.food_level || 85;
+                foodBar.style.width = `${foodLevelValue}%`;
+                foodLevel.textContent = `${foodLevelValue}%`;
+                
+                // Atualizar cor baseada no nível
+                if (foodLevelValue < 20) {
+                    foodBar.style.background = 'linear-gradient(to right, #ef4444, #f87171)';
+                } else if (foodLevelValue < 50) {
+                    foodBar.style.background = 'linear-gradient(to right, #f59e0b, #fbbf24)';
+                } else {
+                    foodBar.style.background = 'linear-gradient(to right, #10b981, #34d399)';
+                }
+            }
+        }
+
+        function setPetSelectorMessage(message, disabled = true) {
+            const selector = document.getElementById('petSelector');
+            if (!selector) return;
+            selector.innerHTML = '';
+            const option = document.createElement('option');
+            option.value = '';
+            option.textContent = message;
+            option.disabled = true;
+            option.selected = true;
+            selector.appendChild(option);
+            selector.disabled = disabled;
+            const selectedName = document.getElementById('selectedPetName');
+            if (selectedName) {
+                selectedName.textContent = message;
+            }
+            const selectedChannel = document.getElementById('selectedPetChannel');
+            if (selectedChannel) {
+                selectedChannel.textContent = 'Canal: —';
+            }
+            updateSelectedPetImage(null);
+        }
+
+        function populatePetSelector(pets) {
+            const selector = document.getElementById('petSelector');
+            if (!selector) return;
+            selector.disabled = false;
+            selector.innerHTML = '';
+            pets.forEach(pet => {
+                const option = document.createElement('option');
+                option.value = pet.id;
+                option.textContent = `${pet.name} (${pet.species || 'Pet'})`;
+                selector.appendChild(option);
+            });
+            if (petId) {
+                selector.value = petId;
+            }
+        }
+
+        function updateSelectedPetImage(pet) {
+            const image = document.getElementById('selectedPetImage');
+            const fallback = document.querySelector('.selected-pet-avatar-fallback');
+            if (!image || !fallback) return;
+            if (pet && pet.photoUrl) {
+                image.src = pet.photoUrl;
+                image.alt = pet.name;
+                image.classList.remove('hidden');
+                fallback.classList.add('hidden');
+            } else {
+                image.src = '';
+                image.alt = 'Pet selecionado';
+                image.classList.add('hidden');
+                fallback.classList.remove('hidden');
+            }
+        }
+
+        function changePet() {
+            const selector = document.getElementById('petSelector');
+            const newPetId = parseInt(selector.value);
+            if (newPetId && newPetId !== petId) {
+                const selectedPet = petsList.find(p => p.id === newPetId);
+                if (selectedPet) {
+                    petId = newPetId;
+                    addLog(`🔄 Pet alterado para: ${selectedPet.name}`, 'success');
+                    updateUI({
+                        food_level: currentFoodLevel,
+                        online: true,
+                        is_dispensing: false,
+                        wifi_rssi: document.getElementById('wifiRssi').textContent.replace(' dBm',''),
+                        battery_level: parseInt(document.getElementById('batteryLevel').textContent, 10)
+                    });
+                }
+            }
+        }
+
+        function updateUI(data) {
+            const foodLevel = data.food_level ?? currentFoodLevel;
+            const isOnline = data.online ?? true;
+            const dispStatus = data.is_dispensing ?? false;
+            const battery = data.battery_level ?? 92;
+            const wifi = data.wifi_rssi ?? -45;
+            const channel = data.channel ?? 0;
+            
+            activeFeedChannel = typeof data.last_feed_channel !== 'undefined' ? data.last_feed_channel : activeFeedChannel;
+            isDispensing = dispStatus;
+            
+            const selectedPet = petsList.find(p => p.id === petId);
+            if (selectedPet) {
+                document.getElementById('selectedPetName').textContent = selectedPet.name;
+                const petChannel = selectedPet.dispenser_channel;
+                document.getElementById('selectedPetChannel').textContent = petChannel !== null && petChannel !== undefined ? 
+                    `Dispensador: ${petChannel + 1} (Canal ${petChannel})` : 'Dispensador: não atribuído';
+                updateSelectedPetImage(selectedPet);
+            } else {
+                document.getElementById('selectedPetName').textContent = 'Selecione um pet para começar';
+                document.getElementById('selectedPetChannel').textContent = 'Dispensador: —';
+                updateSelectedPetImage(null);
+            }
+            
+            document.getElementById('foodLevel').style.height = `${foodLevel}%`;
+            document.getElementById('foodPercentage').textContent = `${foodLevel}%`;
+            document.getElementById('foodLevelValue').textContent = `${foodLevel}%`;
+            
+            const statusEl = document.getElementById('deviceStatus');
+            statusEl.textContent = isOnline ? 'Online' : 'Offline';
+            statusEl.style.color = isOnline ? '#10b981' : '#ef4444';
+            
+            const led = document.getElementById('statusLed');
+            led.className = isOnline ? 'status-led' : 'status-led offline';
+            
+            document.getElementById('batteryLevel').textContent = `${battery}%`;
+            document.getElementById('wifiRssi').textContent = `${wifi} dBm`;
+            
+            const servoArm = document.getElementById('servoArm');
+            const servoAngle = document.getElementById('servoAngle');
+            const dispensingAnim = document.getElementById('dispensingAnim');
+            const servoChannelInfo = document.getElementById('servoChannelInfo');
+            
+            if (isDispensing) {
+                servoArm.classList.add('dispensing');
+                servoAngle.textContent = '90° (Aberto)';
+                dispensingAnim.classList.add('active');
+                servoChannelInfo.textContent = `Dispensador ativo: ${channel + 1} (Canal ${channel})`;
+            } else {
+                servoArm.classList.remove('dispensing');
+                servoAngle.textContent = '0° (Fechado)';
+                dispensingAnim.classList.remove('active');
+                servoChannelInfo.textContent = activeFeedChannel !== null ? 
+                    `Último dispensador: ${activeFeedChannel + 1} (Canal ${activeFeedChannel})` : 'Dispensador ativo: —';
+            }
+            
+            updateChannelsUI();
+        }
+
+        function updateChannelsUI() {
+            const selectedPet = petsList.find(p => p.id === petId);
+            const selectedChannel = selectedPet && selectedPet.dispenser_channel !== undefined ? selectedPet.dispenser_channel : null;
+            const selectedPetName = selectedPet ? selectedPet.name : null;
+            const cards = document.querySelectorAll('.servo-channel-card');
+            const pinNames = ['D18','D21','D22','D23','D25'];
+            
+            cards.forEach(card => {
+                const channelIndex = parseInt(card.dataset.channel, 10);
+                const statusText = channelIndex === selectedChannel ? 'Selecionado para pet' : `Porta ${pinNames[channelIndex]}`;
+                const isCurrent = channelIndex === selectedChannel || channelIndex === activeFeedChannel;
+                
+                card.classList.toggle('active', isCurrent);
+                card.classList.toggle('dispensing', isDispensing && channelIndex === activeFeedChannel);
+                
+                // Atualizar título do card com o nome do pet selecionado
+                const title = card.querySelector('h3');
+                if (title) {
+                    title.textContent = channelIndex === selectedChannel && selectedPetName ?
+                        `Dispensador ${channelIndex + 1} • ${selectedPetName}` :
+                        `Dispensador ${channelIndex + 1}`;
+                }
+                
+                // Atualizar texto da porta
+                const portSpan = card.querySelector('span:not(.channel-status):not(.food-percentage)');
+                if (portSpan) {
+                    portSpan.textContent = statusText;
+                }
+                
+                const statusLine = card.querySelector('.channel-status');
+                if (statusLine) {
+                    if (channelIndex === activeFeedChannel && isDispensing) {
+                        statusLine.textContent = 'Dispensando agora';
+                    } else if (channelIndex === selectedChannel) {
+                        statusLine.textContent = selectedPetName ? `Pronto para ${selectedPetName}` : 'Pronto para pet selecionado';
+                    } else if (channelIndex === activeFeedChannel) {
+                        statusLine.textContent = 'Último dispensador usado';
+                    } else {
+                        statusLine.textContent = 'Ocioso';
+                    }
+                }
+            });
+        }
+
+        async function dispenseFood() {
+            const btn = document.getElementById('dispenseBtn');
+            if (isDispensing) {
+                addLog('⚠️ Já está dispensando...', 'warning');
+                return;
+            }
+            if (!petId) {
+                addLog('❌ Nenhum pet selecionado. Recarregue a página.', 'error');
+                return;
+            }
+            const selectedPet = petsList.find(p => p.id === petId);
+            const quantity = selectedPet && selectedPet.defaultQuantity ? selectedPet.defaultQuantity : 50;
+            const channel = selectedPet && selectedPet.dispenser_channel !== undefined ? selectedPet.dispenser_channel : null;
+            btn.disabled = true;
+            btn.textContent = '⏳ DISPENSANDO...';
+            addLog(`🍽️ Iniciando dispensação para ${selectedPet ? selectedPet.name : 'pet'} (${quantity}g) no canal ${channel !== null ? channel : 'não atribuído'}...`, 'info');
+            try {
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+                const csrfToken = getCSRFToken();
+                if (csrfToken) {
+                    headers['X-CSRFToken'] = csrfToken;
+                }
+                const requestBody = {
+                    pet_id: petId,
+                    quantity: quantity,
+                    notes: 'Dispensação manual do simulador'
+                };
+                if (channel !== null) {
+                    requestBody.channel = channel;
+                }
+                const response = await fetch(`${API_BASE}/feed/`, {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify(requestBody)
+                });
+                const data = await response.json();
+                if (data.success) {
+                    currentFoodLevel = data.device_response.food_level_after ?? currentFoodLevel;
+                    activeFeedChannel = channel;
+                    addLog('✅ Alimentação concluída!', 'success');
+                    addLog(`📊 Ração restante: ${currentFoodLevel}%`, 'info');
+                    updateUI({ food_level: currentFoodLevel, online: true, is_dispensing: true });
+                    simulateDispensing();
+                } else {
+                    addLog(`❌ Erro: ${data.error || 'Falha na dispensação'}`, 'error');
+                    btn.disabled = false;
+                    btn.textContent = '🍽️ DISPENSAR RAÇÃO';
+                }
+            } catch (error) {
+                addLog('⚠️ Erro na conexão: ' + error.message, 'error');
+                addLog('🔄 Tentando modo simulado...', 'info');
+                simulateDispensing();
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.textContent = '🍽️ DISPENSAR RAÇÃO';
+                    updateUI({ food_level: currentFoodLevel, online: true, is_dispensing: false });
+                }, 3000);
+            }
+        }
+
+        function simulateDispensing() {
+            try {
+                updateUI({ 
+                    food_level: currentFoodLevel, 
+                    online: true, 
+                    is_dispensing: true 
+                });
+                const consumed = Math.floor(Math.random() * 10) + 5;
+                currentFoodLevel = Math.max(0, currentFoodLevel - consumed);
+                addLog(`📉 Ração consumida: ${consumed}%`, 'info');
+                setTimeout(() => {
+                    updateUI({ 
+                        food_level: currentFoodLevel, 
+                        online: true, 
+                        is_dispensing: false 
+                    });
+                    const btn = document.getElementById('dispenseBtn');
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.textContent = '🍽️ DISPENSAR RAÇÃO';
+                    }
+                    addLog('✅ Servo fechado', 'success');
+                }, 2000);
+            } catch (error) {
+                addLog('❌ Erro na simulação: ' + error.message, 'error');
+                const btn = document.getElementById('dispenseBtn');
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = '🍽️ DISPENSAR RAÇÃO';
+                }
+            }
+        }
+
+        async function refillContainer() {
+            try {
+                const selectedPet = petsList.find(p => p.id === petId);
+                const channel = selectedPet ? selectedPet.dispenser_channel : 0;
+                
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+                const csrfToken = getCSRFToken();
+                if (csrfToken) {
+                    headers['X-CSRFToken'] = csrfToken;
+                }
+                
+                const response = await fetch(`${API_BASE}/device/refill/`, {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify({ 
+                        food_level: 100,
+                        channel: channel 
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    currentFoodLevel = 100;
+                    updateUI({ 
+                        food_level: 100, 
+                        online: true, 
+                        is_dispensing: false,
+                        channel: channel 
+                    });
+                    addLog(`📦 Dispensador ${channel + 1} reabastecido!`, 'success');
+                    addLog(`✅ Nível: 100%`, 'info');
+                } else {
+                    addLog(`❌ Erro: ${data.message || 'Falha ao reabastecer'}`, 'error');
+                }
+            } catch (error) {
+                addLog('⚠️ Erro na conexão: ' + error.message, 'error');
+                currentFoodLevel = 100;
+                const selectedPet = petsList.find(p => p.id === petId);
+                const channel = selectedPet ? selectedPet.dispenser_channel : 0;
+                updateUI({ 
+                    food_level: 100, 
+                    online: true, 
+                    is_dispensing: false,
+                    channel: channel 
+                });
+                addLog('📦 Reservatório reabastecido (modo local)', 'success');
+            }
+        }
+
+        function addLog(message, type = 'info') {
+            const consoleArea = document.getElementById('logConsole');
+            if (!consoleArea) return;
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            consoleArea.appendChild(entry);
+            consoleArea.scrollTop = consoleArea.scrollHeight;
+            while (consoleArea.children.length > 50) {
+                consoleArea.removeChild(consoleArea.firstChild);
+            }
+        }
+
+        setInterval(loadStatus, 5000);
+        loadStatus();
+    </script>
+{% endblock %}

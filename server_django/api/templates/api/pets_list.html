@@ -1,0 +1,71 @@
+{% extends "api/base.html" %}
+{% block title %}Meus Pets — Pet Paparico{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-slate-50 p-4 sm:p-6 md:p-8">
+    <div class="mx-auto max-w-7xl">
+        <header class="mb-8 flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+            <div>
+                <h1 class="text-2xl sm:text-4xl font-extrabold tracking-tight mb-2">
+                    Meus <span class="text-indigo-600">Pets</span>
+                </h1>
+                <p class="text-slate-500 font-medium">Gerencie as informações e perfis dos seus animais.</p>
+            </div>
+            <a href="{% url 'web_pet_create' %}"
+               class="inline-flex items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-8 py-4 text-white font-bold shadow-xl shadow-indigo-200 hover:bg-indigo-500 w-full sm:w-auto">
+                + Novo Pet
+            </a>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {% for pet in pets %}
+            <article class="bg-white rounded-[2rem] p-6 border border-slate-100 shadow-sm">
+                <div class="rounded-2xl overflow-hidden mb-4 h-48 bg-slate-100">
+                    {% if pet.photo %}
+                    <img src="{{ pet.photo.url }}" alt="{{ pet.name }}" class="w-full h-full object-cover">
+                    {% else %}
+                    <div class="w-full h-full flex items-center justify-center text-4xl text-slate-300">🐾</div>
+                    {% endif %}
+                </div>
+                <h2 class="text-xl font-bold mb-1">{{ pet.name }}</h2>
+                <p class="text-sm text-slate-500 mb-4">{{ pet.species|default:"—" }} · {{ pet.breed|default:"—" }}</p>
+                {% if pet.age or pet.weight %}
+                <p class="text-xs text-slate-400 mb-4">
+                    {% if pet.age %}{{ pet.age }} anos{% endif %}
+                    {% if pet.age and pet.weight %} · {% endif %}
+                    {% if pet.weight %}{{ pet.weight }} kg{% endif %}
+                </p>
+                {% endif %}
+                <div class="flex flex-wrap gap-2">
+                    <a href="{% url 'web_pet_edit' pet.pk %}"
+                       class="flex-1 text-center rounded-xl border border-slate-200 py-2 text-sm font-bold hover:bg-slate-50">
+                        Editar
+                    </a>
+                    <form method="post" action="{% url 'web_manual_feed' pet.pk %}" class="flex-1">
+                        {% csrf_token %}
+                        <input type="hidden" name="quantity" value="50">
+                        <input type="hidden" name="next" value="{% url 'web_pets' %}">
+                        <button type="submit" class="w-full rounded-xl bg-emerald-600 text-white py-2 text-sm font-bold hover:bg-emerald-500">
+                            Alimentar
+                        </button>
+                    </form>
+                    <form method="post" action="{% url 'web_pet_delete' pet.pk %}" class="w-full"
+                          onsubmit="return confirm('Remover {{ pet.name }}?');">
+                        {% csrf_token %}
+                        <button type="submit" class="w-full rounded-xl border border-rose-200 text-rose-600 py-2 text-sm font-bold hover:bg-rose-50">
+                            Excluir
+                        </button>
+                    </form>
+                </div>
+            </article>
+            {% empty %}
+            <div class="col-span-full text-center py-16 text-slate-500">
+                <p class="text-5xl mb-4">🐕</p>
+                <p class="font-medium mb-4">Nenhum pet cadastrado.</p>
+                <a href="{% url 'web_pet_create' %}" class="text-indigo-600 font-bold hover:underline">Cadastrar primeiro pet</a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,144 @@
+{% extends "api/base.html" %}
+{% block title %}Minha Casa — Pet Paparico{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-slate-50">
+    <div class="border-b border-slate-200 bg-white px-4 py-4 sm:px-8">
+        <div class="mx-auto flex max-w-7xl items-center justify-between gap-3">
+            <div class="flex items-center gap-2">
+                <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 text-xl shadow-lg shadow-indigo-200">🍪</div>
+                <span class="text-xl font-bold">Pet Paparico</span>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="hidden text-right sm:block">
+                    <p class="text-sm font-bold leading-none">Olá, {{ display_name }}</p>
+                    <p class="text-xs text-slate-500 font-medium">Tutor Responsável</p>
+                </div>
+                {% url 'web_profile' as profile_url %}
+                {% include "api/partials/user_avatar.html" with link_url=profile_url %}
+            </div>
+        </div>
+    </div>
+
+    <div class="mx-auto max-w-7xl p-4 sm:p-6 md:p-8">
+        <header class="mb-8 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+            <div>
+                <h2 class="text-2xl sm:text-4xl font-extrabold tracking-tight text-slate-900 mb-2">Sua Casa</h2>
+                <p class="text-slate-500 font-medium">Gerencie e acompanhe seus pets em tempo real.</p>
+            </div>
+            <a href="{% url 'web_pet_create' %}"
+               class="inline-flex items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-6 py-4 text-white font-bold shadow-xl shadow-indigo-200 hover:bg-indigo-500 transition-all w-full md:w-auto">
+                + Adicionar Novo Pet
+            </a>
+        </header>
+
+        {% if dispenser_cleaning_due %}
+        <div class="mb-8 rounded-[2rem] border border-amber-200 bg-gradient-to-r from-amber-50 via-yellow-50 to-orange-50 px-5 py-5 shadow-sm ring-1 ring-amber-100">
+            <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div class="flex items-start gap-3">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 text-2xl">🧼</div>
+                    <div>
+                        <p class="text-[10px] font-black uppercase tracking-[0.22em] text-amber-700">Atenção</p>
+                        <p class="mt-1 text-base font-black text-amber-900 sm:text-lg">Limpeza pendente do comedouro</p>
+                        <p class="mt-1 text-sm font-medium text-amber-800">É hora de limpar o dispensador e reiniciar o ciclo de manutenção.</p>
+                    </div>
+                </div>
+                <div class="flex flex-wrap gap-3">
+                    <a href="{% url 'web_dispenser_cleaning' %}" class="inline-flex items-center justify-center rounded-2xl bg-amber-500 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-amber-600">Abrir lembrete</a>
+                    <a href="{% url 'web_dispenser_cleaning' %}" class="inline-flex items-center justify-center rounded-2xl border border-amber-200 bg-white px-4 py-2.5 text-sm font-bold text-amber-800 transition hover:bg-amber-100">Marcar limpeza</a>
+                </div>
+            </div>
+        </div>
+        {% elif dispenser_cleaning_days > 0 %}
+        <div class="mb-8 rounded-[2rem] border border-emerald-200 bg-gradient-to-r from-emerald-50 via-green-50 to-teal-50 px-5 py-5 shadow-sm ring-1 ring-emerald-100">
+            <div class="flex items-center gap-3">
+                <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-2xl">✅</div>
+                <div>
+                    <p class="text-[10px] font-black uppercase tracking-[0.22em] text-emerald-700">Manutenção</p>
+                    <p class="mt-1 text-base font-black text-emerald-900 sm:text-lg">Limpeza em dia</p>
+                    <p class="mt-1 text-sm font-medium text-emerald-800">Próximo lembrete em {{ dispenser_cleaning_days }} dia(s).</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {% for pet in pets %}
+            <article class="group bg-white rounded-[2.5rem] p-6 shadow-sm border border-slate-100 hover:shadow-2xl transition-all">
+                <div class="relative overflow-hidden rounded-[2rem] mb-6">
+                    {% if pet.photo %}
+                    <img src="{{ pet.photo.url }}" alt="{{ pet.name }}" class="w-full h-56 object-cover group-hover:scale-105 transition-transform duration-500">
+                    {% else %}
+                    <img src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&q=80&w=800" alt="{{ pet.name }}" class="w-full h-56 object-cover">
+                    {% endif %}
+                    <span class="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-[10px] font-black text-indigo-600 uppercase">
+                        {{ pet.species|default:"Pet" }}
+                    </span>
+                </div>
+                <h3 class="text-2xl font-bold mb-1 group-hover:text-indigo-600 transition-colors">{{ pet.name }}</h3>
+                <p class="text-slate-500 text-sm font-medium mb-6 flex items-center gap-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                    {{ pet.breed|default:"Raça não definida" }}
+                </p>
+                <div class="flex flex-col gap-3 sm:flex-row">
+                    <a href="{% url 'web_feeding' %}?pet={{ pet.id }}" class="flex-1 text-center rounded-2xl border border-slate-200 py-4 font-bold text-slate-700 hover:bg-slate-50 hover:text-indigo-600 transition-colors">
+                        Detalhes
+                    </a>
+                    <form method="post" action="{% url 'web_manual_feed' pet.pk %}" class="flex-[1.5]">
+                        {% csrf_token %}
+                        <input type="hidden" name="quantity" value="{{ pet.defaultQuantity|default:50 }}">
+                        <input type="hidden" name="next" value="{% url 'web_home' %}">
+                        <button type="submit" class="w-full rounded-2xl bg-slate-900 py-4 font-bold text-white shadow-lg hover:bg-indigo-600 transition-colors">
+                            Alimentar ({{ pet.defaultQuantity|default:50 }}g)
+                        </button>
+                    </form>
+                </div>
+            </article>
+            {% empty %}
+            <div class="col-span-full bg-white rounded-[2.5rem] p-8 sm:p-12 border-2 border-dashed border-slate-200 text-center">
+                <p class="text-6xl mb-4">🐾</p>
+                <h3 class="text-2xl font-bold mb-2">Pronto para começar?</h3>
+                <p class="text-slate-500 max-w-2xl mx-auto mb-8">Cadastre seu primeiro pet, configure a ração e acompanhe tudo pela sua Casa em poucos passos.</p>
+                <div class="grid gap-4 text-left sm:grid-cols-3 max-w-4xl mx-auto mb-8">
+                    <div class="rounded-[1.5rem] bg-slate-50 p-5 border border-slate-100">
+                        <p class="text-sm font-black uppercase text-indigo-600 mb-2">1. Cadastre</p>
+                        <p class="text-sm text-slate-600">Registre o nome, raça e preferências do seu pet.</p>
+                    </div>
+                    <div class="rounded-[1.5rem] bg-slate-50 p-5 border border-slate-100">
+                        <p class="text-sm font-black uppercase text-indigo-600 mb-2">2. Configure</p>
+                        <p class="text-sm text-slate-600">Defina o volume ideal e habilite os alertas que você quer receber.</p>
+                    </div>
+                    <div class="rounded-[1.5rem] bg-slate-50 p-5 border border-slate-100">
+                        <p class="text-sm font-black uppercase text-indigo-600 mb-2">3. Acompanhe</p>
+                        <p class="text-sm text-slate-600">Monitore alimentação, ração e o estado do dispensador em tempo real.</p>
+                    </div>
+                </div>
+                <div class="flex flex-wrap justify-center gap-3">
+                    <a href="{% url 'web_pet_create' %}" class="inline-block bg-indigo-600 text-white rounded-2xl px-8 py-4 font-bold hover:bg-indigo-500">Cadastrar meu primeiro pet</a>
+                    <a href="{% url 'web_notifications' %}" class="inline-block border border-slate-200 text-slate-700 rounded-2xl px-8 py-4 font-bold hover:bg-slate-50">Ver notificações</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
+                <p class="text-3xl font-bold">{{ pets_count }}</p>
+                <p class="text-sm font-medium text-slate-500">Pets Ativos</p>
+            </div>
+            <div class="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
+                <p class="text-3xl font-bold">{{ feedings_today }}</p>
+                <p class="text-sm font-medium text-slate-500">Refeições Hoje</p>
+            </div>
+            <div class="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
+                <p class="text-3xl font-bold">{% if food_level is not None %}{{ food_level }}%{% else %}—{% endif %}</p>
+                <p class="text-sm font-medium text-slate-500">Nível de Ração</p>
+            </div>
+            <div class="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
+                <p class="text-3xl font-bold">{% if device_online %}Online{% elif device_online == False %}Offline{% else %}—{% endif %}</p>
+                <p class="text-sm font-medium text-slate-500">Status Dispositivo</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

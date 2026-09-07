@@ -1,0 +1,128 @@
+{% extends "api/base.html" %}
+{% block title %}Testar Conexão — Pet Paparico{% endblock %}
+{% block content %}
+<div class="min-h-screen bg-slate-50 p-4 sm:p-6 md:p-8">
+<div class="mx-auto max-w-3xl">
+<header class="mb-8">
+<div class="flex items-center gap-4 mb-4">
+<a href="{% url 'web_device' %}" class="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 rounded-lg border-2 border-slate-200 font-bold transition-all hover:border-indigo-300 hover:text-indigo-600">
+<span>←</span>
+<span>Voltar</span>
+</a>
+</div>
+<span class="inline-block bg-violet-100 text-violet-700 text-xs font-bold uppercase px-3 py-1 rounded-full mb-3">IoT</span>
+<h1 class="text-3xl sm:text-4xl font-black">Testar Conexão ESP32</h1>
+<p class="text-slate-500 mt-2">Verifique a comunicação com o dispositivo</p>
+</header>
+
+<div class="bg-white rounded-[2rem] border border-slate-100 p-6 shadow-sm mb-6">
+<div class="text-center mb-6">
+<div class="inline-flex items-center justify-center w-24 h-24 rounded-full {% if status.online %}bg-emerald-100{% else %}bg-rose-100{% endif %} mb-4">
+{% if status.online %}
+<span class="text-5xl">✅</span>
+{% else %}
+<span class="text-5xl">❌</span>
+{% endif %}
+</div>
+<h2 class="text-2xl font-black mb-2 {% if status.online %}text-emerald-600{% else %}text-rose-600{% endif %}">
+{% if status.online %}
+Conexão Estabelecida!
+{% else %}
+Conexão Falhou
+{% endif %}
+</h2>
+<p class="text-slate-600">
+{% if status.online %}
+O ESP32 está respondendo corretamente
+{% else %}
+Não foi possível conectar ao ESP32
+{% endif %}
+</p>
+</div>
+
+<div class="space-y-4">
+<div class="bg-slate-50 rounded-2xl p-5 border-2 border-slate-200">
+<div class="flex items-center justify-between">
+<div>
+<p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">URL do Dispositivo</p>
+<p class="text-lg font-black text-slate-900 font-mono">{{ status.esp32_url }}</p>
+</div>
+<div class="text-3xl">🌐</div>
+</div>
+</div>
+
+<div class="bg-slate-50 rounded-2xl p-5 border-2 border-slate-200">
+<div class="flex items-center justify-between">
+<div>
+<p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Status</p>
+<p class="text-lg font-black {% if status.online %}text-emerald-600{% else %}text-rose-600{% endif %}">
+{% if status.online %}Online{% else %}Offline{% endif %}
+</p>
+</div>
+<div class="text-3xl">{% if status.online %}🟢{% else %}🔴{% endif %}</div>
+</div>
+</div>
+
+{% if status.device_info %}
+<div class="bg-indigo-50 rounded-2xl p-5 border-2 border-indigo-200">
+<p class="text-xs font-bold text-indigo-600 uppercase tracking-wider mb-3">Informações do Dispositivo</p>
+<pre class="text-sm font-mono text-indigo-900 overflow-x-auto">{{ status.device_info|safe }}</pre>
+</div>
+{% endif %}
+
+{% if status.error %}
+<div class="bg-rose-50 rounded-2xl p-5 border-2 border-rose-200">
+<p class="text-xs font-bold text-rose-600 uppercase tracking-wider mb-3">Erro</p>
+<p class="text-sm font-mono text-rose-900">{{ status.error }}</p>
+</div>
+{% endif %}
+</div>
+</div>
+
+<div class="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl p-6 border-2 border-indigo-200">
+<h3 class="font-bold text-indigo-900 mb-3">🔍 Diagnóstico</h3>
+<div class="space-y-3 text-sm text-indigo-800">
+{% if status.online %}
+<div class="flex items-start gap-3">
+<span class="text-emerald-600 font-bold">✓</span>
+<span>ESP32 está online e respondendo</span>
+</div>
+<div class="flex items-start gap-3">
+<span class="text-emerald-600 font-bold">✓</span>
+<span>Conexão de rede funcionando</span>
+</div>
+<div class="flex items-start gap-3">
+<span class="text-emerald-600 font-bold">✓</span>
+<span>API do ESP32 acessível</span>
+</div>
+{% else %}
+<div class="flex items-start gap-3">
+<span class="text-rose-600 font-bold">✗</span>
+<span>ESP32 não está respondendo</span>
+</div>
+<div class="bg-white/50 rounded-xl p-4 mt-3">
+<p class="font-bold mb-2">Possíveis causas:</p>
+<ul class="space-y-1 ml-4">
+<li>• ESP32 desligado ou sem energia</li>
+<li>• Problema de conexão WiFi</li>
+<li>• IP do ESP32 alterado</li>
+<li>• Firewall bloqueando comunicação</li>
+</ul>
+</div>
+{% endif %}
+</div>
+</div>
+
+<div class="mt-6 flex gap-4">
+<a href="{% url 'web_device' %}" class="flex-1 bg-white border-2 border-slate-200 text-slate-700 rounded-2xl py-4 font-bold text-center hover:bg-slate-50 transition-all">
+← Voltar para Dispositivo
+</a>
+{% if not status.online %}
+<button onclick="window.location.reload()" class="flex-1 bg-indigo-600 text-white rounded-2xl py-4 font-bold hover:bg-indigo-500 transition-all">
+🔄 Tentar Novamente
+</button>
+{% endif %}
+</div>
+</div>
+</div>
+{% endblock %}

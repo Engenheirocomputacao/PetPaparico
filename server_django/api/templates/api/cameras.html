@@ -1,0 +1,145 @@
+{% extends "api/base.html" %}
+{% block title %}Câmeras — Pet Paparico{% endblock %}
+{% block content %}
+<div class="min-h-screen bg-slate-50 p-4 sm:p-6 md:p-8">
+<div class="mx-auto max-w-7xl">
+<header class="mb-8">
+<div class="flex flex-col sm:flex-row sm:items-center gap-4">
+<div class="flex items-center gap-4">
+{% if selected_pet and selected_pet.photo %}
+<img src="{{ selected_pet.photo.url }}" alt="{{ selected_pet.name }}" class="h-20 w-20 rounded-3xl object-cover border border-slate-200 shadow-sm">
+{% else %}
+<div class="h-20 w-20 rounded-3xl bg-slate-100 text-slate-500 flex items-center justify-center text-3xl border border-slate-200">🐾</div>
+{% endif %}
+<div>
+<h1 class="text-2xl sm:text-4xl font-extrabold mb-2">Monitoramento por <span class="text-indigo-600">Câmera</span></h1>
+</div>
+</div>
+</div>
+</header>
+
+{% include "api/partials/pet_select.html" with selected_pet=selected_pet pets=pets %}
+
+{% if selected_pet %}
+<details class="mb-6 bg-white rounded-2xl border border-slate-100 p-4">
+<summary class="font-bold text-indigo-600 cursor-pointer">+ Adicionar câmera</summary>
+<form method="post" class="mt-4 space-y-4">
+{% csrf_token %}
+<input type="hidden" name="pet_id" value="{{ selected_pet.id }}">
+<input type="hidden" name="action" value="add_camera">
+<input type="text" name="name" placeholder="Nome da câmera" class="w-full rounded-xl border px-4 py-3" required>
+<input type="url" name="rtspUrl" placeholder="URL (RTSP, YouTube, imagem...)" class="w-full rounded-xl border px-4 py-3" required>
+<button type="submit" class="w-full bg-indigo-600 text-white rounded-xl py-3 font-bold">Salvar</button>
+</form>
+</details>
+
+<div class="grid lg:grid-cols-2 gap-6 mb-10">
+{% for cam in cameras %}
+<div class="bg-white rounded-[2rem] border border-slate-100 overflow-hidden shadow-sm">
+<div class="aspect-video bg-black relative">
+{% if cam.embed_url %}
+    {% if "youtube.com/embed" in cam.embed_url or "twitch.tv" in cam.embed_url %}
+    <iframe src="{{ cam.embed_url }}?autoplay=1&mute=1" class="w-full h-full" allow="autoplay; encrypted-media" allowfullscreen title="{{ cam.name }}" sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
+    {% elif cam.embed_url|slice:"-4:" == ".jpg" or cam.embed_url|slice:"-4:" == ".png" or cam.embed_url|slice:"-4:" == ".gif" or cam.embed_url|slice:"-5:" == ".webp" %}
+    <img src="{{ cam.embed_url }}" alt="{{ cam.name }}" class="w-full h-full object-contain">
+    {% else %}
+    <iframe src="{{ cam.embed_url }}" class="w-full h-full" title="{{ cam.name }}" sandbox="allow-scripts allow-same-origin allow-autoplay" allow="autoplay"></iframe>
+    {% endif %}
+{% else %}
+    <div class="w-full h-full flex items-center justify-center p-6 text-center text-sm text-slate-200">
+        URL inválida ou não suportada.
+    </div>
+{% endif %}
+</div>
+<div class="p-4 flex justify-between items-center">
+<h3 class="font-bold">{{ cam.name }}</h3>
+<div class="flex gap-2 items-center">
+<a href="{{ cam.rtspUrl }}" target="_blank" rel="noopener noreferrer" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 px-3 py-2 rounded-lg bg-indigo-50 hover:bg-indigo-100 transition-colors">
+🔗 Abrir na Web
+</a>
+{% if not cam.isActive %}
+<span class="text-xs font-bold text-amber-700 bg-amber-100 px-2 py-1 rounded-full">Inativa</span>
+{% endif %}
+<form method="post">{% csrf_token %}
+<input type="hidden" name="pet_id" value="{{ selected_pet.id }}">
+<input type="hidden" name="action" value="delete_camera">
+<input type="hidden" name="camera_id" value="{{ cam.id }}">
+<button type="submit" class="text-rose-600 text-sm font-bold px-3 py-2 rounded-lg hover:bg-rose-50 transition-colors" onclick="return confirm('Remover câmera?')">Excluir</button>
+</form>
+</div>
+</div>
+<div class="px-4 pb-4">
+<div class="flex justify-end gap-2">
+<button type="button" data-camera-id="{{ cam.id }}" class="edit-camera-button text-sm font-bold text-slate-700 bg-slate-100 border border-slate-200 hover:border-indigo-500 hover:bg-slate-200 hover:text-slate-900 px-3 py-2 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5">
+✏️ Editar
+</button>
+</div>
+<div id="edit-form-{{ cam.id }}" class="hidden mt-4 rounded-2xl bg-slate-50 border border-slate-200 p-4">
+<form method="post" class="space-y-3">
+{% csrf_token %}
+<input type="hidden" name="pet_id" value="{{ selected_pet.id }}">
+<input type="hidden" name="action" value="edit_camera">
+<input type="hidden" name="camera_id" value="{{ cam.id }}">
+<div>
+<label class="text-xs font-bold uppercase tracking-wider text-slate-500">Nome</label>
+<input type="text" name="name" value="{{ cam.name }}" class="w-full rounded-xl border px-4 py-3" required>
+</div>
+<div>
+<label class="text-xs font-bold uppercase tracking-wider text-slate-500">URL</label>
+<input type="url" name="rtspUrl" value="{{ cam.rtspUrl }}" class="w-full rounded-xl border px-4 py-3" required>
+</div>
+<button type="submit" class="w-full bg-yellow-500 text-slate-900 border border-yellow-500 hover:border-yellow-600 hover:bg-yellow-400 hover:text-slate-950 rounded-xl py-3 font-bold transition-all duration-200 transform hover:-translate-y-0.5">Salvar alterações</button>
+</form>
+</div>
+</div>
+</div>
+{% empty %}
+<p class="col-span-full text-center text-slate-400 py-8">Nenhuma câmera cadastrada.</p>
+{% endfor %}
+</div>
+
+{% if captures %}
+<h2 class="text-xl font-bold mb-4">Galeria de capturas</h2>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+{% for cap in captures %}
+<div class="relative group rounded-xl overflow-hidden border border-slate-200">
+<img src="{{ cap.mediaUrl }}" alt="" class="w-full aspect-square object-cover">
+<form method="post" class="absolute top-2 right-2">{% csrf_token %}
+<input type="hidden" name="pet_id" value="{{ selected_pet.id }}">
+<input type="hidden" name="action" value="delete_capture">
+<input type="hidden" name="capture_id" value="{{ cap.id }}">
+<button type="submit" class="bg-red-600 text-white text-xs px-2 py-1 rounded font-bold opacity-0 group-hover:opacity-100">✕</button>
+</form>
+</div>
+{% endfor %}
+</div>
+{% endif %}
+
+{% else %}
+<div class="text-center bg-white rounded-[2rem] p-12 border border-slate-100">
+<p class="text-5xl mb-4">📷</p>
+<h2 class="text-xl font-bold mb-2">Selecione um pet para visualizar a câmera</h2>
+<p class="text-slate-500 mb-6">Cadastre um pet e adicione uma câmera para acompanhar o monitoramento em tempo real.</p>
+<div class="flex flex-wrap justify-center gap-3">
+<a href="{% url 'web_pet_create' %}" class="inline-flex items-center justify-center rounded-2xl bg-indigo-600 px-6 py-3 font-bold text-white hover:bg-indigo-500">Cadastrar pet</a>
+{% if pets %}
+<a href="{% url 'web_pets' %}" class="inline-flex items-center justify-center rounded-2xl border border-slate-200 px-6 py-3 font-bold text-slate-700 hover:bg-slate-50">Ver meus pets</a>
+{% endif %}
+</div>
+</div>
+{% endif %}
+</div>
+</div>
+<script>
+  document.querySelectorAll('.edit-camera-button').forEach(function(button) {
+    button.addEventListener('click', function() {
+      var cameraId = this.dataset.cameraId;
+      var form = document.getElementById('edit-form-' + cameraId);
+      if (form) {
+        form.classList.toggle('hidden');
+        form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    });
+  });
+</script>
+{% endblock %}

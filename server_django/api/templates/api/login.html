@@ -1,0 +1,186 @@
+{% extends "api/base.html" %}
+{% block title %}Entrar — Pet Paparico{% endblock %}
+
+{% block content %}
+<div class="min-h-screen relative flex items-center justify-center overflow-hidden">
+    <div class="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
+         style="background-image: url('https://images.unsplash.com/photo-1583337130417-3346a1be7dee?auto=format&fit=crop&q=80&w=1920');"></div>
+    <div class="absolute inset-0 z-10 bg-gradient-to-br from-indigo-900/95 via-slate-900/90 to-indigo-900/95"></div>
+
+    <div class="relative z-20 w-full max-w-md px-4 py-12">
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-white/10 backdrop-blur-md rounded-3xl mb-4 border border-white/20 shadow-2xl text-4xl">
+                🐾
+            </div>
+            <h1 class="text-4xl font-extrabold text-white mb-2 tracking-tight">
+                PET<span class="text-indigo-400">PAPARICO</span>
+            </h1>
+            <p class="text-slate-300 font-medium">Faça login para gerenciar seus pets</p>
+        </div>
+
+        <div class="bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20 shadow-2xl">
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                <div class="space-y-2">
+                    <label class="text-sm font-bold text-white/90 uppercase tracking-wider">Username</label>
+                    <input type="text" name="username" value="{{ username|default:'' }}" required autocomplete="username"
+                           class="w-full px-4 py-4 bg-white/10 border border-white/20 rounded-2xl text-white placeholder-white/40 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                           placeholder="Seu username">
+                </div>
+                <div class="space-y-2">
+                    <label class="text-sm font-bold text-white/90 uppercase tracking-wider">Senha</label>
+                    <div class="relative">
+                        <input id="login-password" type="password" name="password" required autocomplete="current-password"
+                               class="w-full px-4 py-4 pr-14 bg-white/10 border border-white/20 rounded-2xl text-white placeholder-white/40 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                               placeholder="Sua senha">
+                        <button type="button" id="toggle-login-password" class="absolute inset-y-0 right-3 flex items-center text-white/80 hover:text-white" aria-label="Mostrar senha">
+                            <svg id="login-eye-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between gap-3">
+                        <label class="text-sm font-bold text-white/90 uppercase tracking-wider">Desafio de segurança</label>
+                        <button type="button" id="refresh-login-captcha" class="rounded-2xl border border-white/15 bg-white/10 px-3 py-2 text-white/90 hover:bg-white/15">
+                            ↻
+                        </button>
+                    </div>
+                    <p class="text-sm text-white/80">Selecione a imagem do <span id="login-captcha-target" class="font-bold text-indigo-200"></span>.</p>
+                    <div id="login-captcha-grid" class="grid grid-cols-2 gap-3"></div>
+                    <input type="hidden" id="login-captcha-answer" value="">
+                    <p id="login-captcha-error" class="hidden text-sm text-rose-300"></p>
+                </div>
+                <button type="submit"
+                        class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 px-6 rounded-2xl shadow-xl shadow-indigo-500/30 transition-all hover:-translate-y-0.5">
+                    ENTRAR
+                </button>
+            </form>
+            <div class="mt-6 pt-6 border-t border-white/10 text-center">
+                <p class="text-sm text-white/60">
+                    Não tem uma conta?
+                    <a href="{% url 'web_register' %}" class="text-indigo-400 hover:text-indigo-300 font-bold">Criar Conta</a>
+                </p>
+            </div>
+        </div>
+        <div class="text-center mt-6">
+            <a href="{% url 'web_home' %}" class="text-white/60 hover:text-white font-medium text-sm">← Voltar para página inicial</a>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    const passwordInput = document.getElementById('login-password');
+    const toggleButton = document.getElementById('toggle-login-password');
+    const eyeIcon = document.getElementById('login-eye-icon');
+
+    if (passwordInput && toggleButton && eyeIcon) {
+        toggleButton.addEventListener('click', () => {
+            const isHidden = passwordInput.type === 'password';
+            passwordInput.type = isHidden ? 'text' : 'password';
+            eyeIcon.innerHTML = isHidden
+                ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 19c-7 0-10-7-10-7a18.45 18.45 0 0 1 5.06-5.94"></path><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 10 7 10 7a18.5 18.5 0 0 1-2.16 3.19"></path><path d="M14.12 14.12 9.88 9.88"></path><line x1="1" y1="1" x2="23" y2="23"></line>'
+                : '<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle>';
+        });
+    }
+
+    const createCaptchaImage = (emoji, label) => {
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="220" height="180" viewBox="0 0 220 180">
+            <defs>
+                <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#1d4ed8"/>
+                    <stop offset="100%" stop-color="#0f172a"/>
+                </linearGradient>
+            </defs>
+            <rect width="220" height="180" rx="28" fill="url(#bg)"/>
+            <circle cx="180" cy="32" r="22" fill="rgba(255,255,255,0.12)"/>
+            <circle cx="40" cy="160" r="18" fill="rgba(255,255,255,0.1)"/>
+            <text x="50%" y="48%" text-anchor="middle" font-size="64" font-family="Arial, sans-serif">${emoji}</text>
+            <text x="50%" y="86%" text-anchor="middle" font-size="18" font-family="Arial, sans-serif" fill="#f8fafc">${label}</text>
+        </svg>`;
+        return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+    };
+
+    const captchaOptions = [
+        { id: 'dog', emoji: '🐶', label: 'cachorro', target: 'cachorro' },
+        { id: 'cat', emoji: '🐱', label: 'gato', target: 'gato' },
+        { id: 'rabbit', emoji: '🐰', label: 'coelho', target: 'coelho' },
+        { id: 'frog', emoji: '🐸', label: 'sapo', target: 'sapo' },
+        { id: 'bird', emoji: '🐦', label: 'pássaro', target: 'pássaro' },
+        { id: 'horse', emoji: '🐴', label: 'cavalo', target: 'cavalo' },
+        { id: 'penguin', emoji: '🐧', label: 'pinguim', target: 'pinguim' },
+        { id: 'bear', emoji: '🐻', label: 'urso', target: 'urso' },
+        { id: 'fox', emoji: '🦊', label: 'raposa', target: 'raposa' },
+        { id: 'turtle', emoji: '🐢', label: 'tartaruga', target: 'tartaruga' },
+        { id: 'lion', emoji: '🦁', label: 'leão', target: 'leão' },
+        { id: 'whale', emoji: '🐋', label: 'baleia', target: 'baleia' },
+        { id: 'monkey', emoji: '🐵', label: 'macaco', target: 'macaco' },
+        { id: 'sheep', emoji: '🐑', label: 'ovelha', target: 'ovelha' },
+        { id: 'cow', emoji: '🐄', label: 'vaca', target: 'vaca' }
+    ];
+
+    const form = document.querySelector('form');
+    const grid = document.getElementById('login-captcha-grid');
+    const targetLabel = document.getElementById('login-captcha-target');
+    const hiddenAnswer = document.getElementById('login-captcha-answer');
+    const errorMessage = document.getElementById('login-captcha-error');
+    const refreshButton = document.getElementById('refresh-login-captcha');
+
+    let currentTarget = null;
+    let selectedOption = null;
+
+    function renderCaptcha() {
+        const shuffled = [...captchaOptions].sort(() => Math.random() - 0.5);
+        const options = shuffled.slice(0, 4);
+        const target = options[Math.floor(Math.random() * options.length)];
+        currentTarget = target;
+        selectedOption = null;
+        hiddenAnswer.value = '';
+        targetLabel.textContent = target.target;
+        errorMessage.classList.add('hidden');
+        errorMessage.textContent = '';
+
+        grid.innerHTML = options.map((option) => `
+            <button type="button"
+                    data-option-id="${option.id}"
+                    class="captcha-option rounded-2xl border border-white/15 bg-white/10 p-3 text-left transition-all hover:border-indigo-300 hover:bg-white/15"
+                    aria-pressed="false">
+                <img src="${createCaptchaImage(option.emoji, option.label)}" alt="${option.label}" class="mx-auto h-24 w-full rounded-xl object-cover bg-slate-950/30">
+                <p class="mt-3 text-center text-sm font-semibold text-white/90">${option.label}</p>
+            </button>
+        `).join('');
+
+        grid.querySelectorAll('.captcha-option').forEach((button) => {
+            button.addEventListener('click', () => {
+                selectedOption = button.dataset.optionId;
+                grid.querySelectorAll('.captcha-option').forEach((other) => {
+                    other.classList.remove('border-indigo-300', 'bg-indigo-100');
+                    other.setAttribute('aria-pressed', 'false');
+                });
+                button.classList.add('border-indigo-300', 'bg-indigo-100');
+                button.setAttribute('aria-pressed', 'true');
+                hiddenAnswer.value = selectedOption;
+                errorMessage.classList.add('hidden');
+                errorMessage.textContent = '';
+            });
+        });
+    }
+
+    if (form && grid && targetLabel && hiddenAnswer && errorMessage && refreshButton) {
+        renderCaptcha();
+        refreshButton.addEventListener('click', renderCaptcha);
+
+        form.addEventListener('submit', (event) => {
+            if (!selectedOption || selectedOption !== currentTarget.id) {
+                event.preventDefault();
+                errorMessage.textContent = 'Selecione a imagem correta para continuar.';
+                errorMessage.classList.remove('hidden');
+            }
+        });
+    }
+})();
+</script>
+{% endblock %}

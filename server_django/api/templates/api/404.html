@@ -1,0 +1,10 @@
+{% extends "api/base.html" %}
+{% block title %}Página não encontrada{% endblock %}
+{% block content %}
+<div class="min-h-screen flex flex-col items-center justify-center p-8 text-center">
+<p class="text-8xl font-black text-indigo-200 mb-4">404</p>
+<h1 class="text-2xl font-bold text-slate-900 mb-2">Página não encontrada</h1>
+<p class="text-slate-500 mb-8">O endereço que você acessou não existe.</p>
+<a href="{% url 'web_home' %}" class="bg-indigo-600 text-white font-bold px-8 py-4 rounded-2xl hover:bg-indigo-500">Voltar ao início</a>
+</div>
+{% endblock %}

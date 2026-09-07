@@ -1,0 +1,83 @@
+{% extends "api/base.html" %}
+{% block title %}Perfil — Pet Paparico{% endblock %}
+{% block content %}
+<div class="min-h-screen bg-slate-50 p-4 sm:p-6 md:p-8">
+<div class="mx-auto max-w-3xl">
+<header class="mb-8">
+<h1 class="text-2xl sm:text-4xl font-extrabold mb-2">Seu <span class="text-indigo-600">Perfil</span></h1>
+<p class="text-slate-500 font-medium">Informações do tutor.</p>
+</header>
+
+<div class="bg-white rounded-[2rem] border border-slate-100 p-6 sm:p-8 shadow-sm">
+<form method="post" enctype="multipart/form-data" class="flex flex-col md:flex-row gap-8">
+{% csrf_token %}
+<div class="shrink-0 mx-auto md:mx-0">
+<div class="w-40 h-40 rounded-[2rem] bg-indigo-50 border-4 border-white shadow-xl overflow-hidden flex items-center justify-center text-4xl text-indigo-200">
+{% if user_photo_url %}
+<img src="{{ user_photo_url }}" alt="{{ display_name }}" class="w-full h-full object-cover">
+{% else %}👤{% endif %}
+</div>
+<div class="mt-4 text-center">
+<label class="inline-flex items-center justify-center rounded-2xl bg-indigo-50 px-4 py-3 text-sm font-bold text-indigo-700 cursor-pointer hover:bg-indigo-100">
+Alterar foto
+<input type="file" name="photo" accept="image/*" class="hidden">
+</label>
+<p class="mt-2 text-xs text-slate-500">Formatos aceitos: JPG, PNG e WebP.</p>
+</div>
+</div>
+<div class="flex-1 space-y-4 w-full">
+<div class="grid sm:grid-cols-2 gap-4">
+<div>
+<label class="text-xs font-bold uppercase text-slate-500">Primeiro nome</label>
+<input type="text" name="first_name" value="{{ profile_user.first_name }}" class="w-full rounded-xl border px-4 py-3 font-bold mt-1">
+</div>
+<div>
+<label class="text-xs font-bold uppercase text-slate-500">Sobrenome</label>
+<input type="text" name="last_name" value="{{ profile_user.last_name }}" class="w-full rounded-xl border px-4 py-3 font-bold mt-1">
+</div>
+</div>
+<div>
+<label class="text-xs font-bold uppercase text-slate-500">E-mail</label>
+<input type="email" name="email" value="{{ profile_user.email }}" class="w-full rounded-xl border px-4 py-3 font-bold mt-1">
+</div>
+<div class="grid sm:grid-cols-2 gap-4">
+<div>
+<label class="text-xs font-bold uppercase text-slate-500">CPF</label>
+<input type="text" name="cpf" value="{{ profile_user.cpf|default:'' }}" placeholder="XXX.XXX.XXX-XX" class="w-full rounded-xl border px-4 py-3 font-bold mt-1">
+</div>
+<div>
+<label class="text-xs font-bold uppercase text-slate-500">Telefone</label>
+<input type="tel" name="telefone" value="{{ profile_user.telefone|default:'' }}" placeholder="(11) 99999-9999" class="w-full rounded-xl border px-4 py-3 font-bold mt-1">
+</div>
+</div>
+<div class="grid sm:grid-cols-2 gap-4">
+<div>
+<label class="text-xs font-bold uppercase text-slate-500">Cidade</label>
+<input type="text" name="cidade" value="{{ profile_user.cidade|default:'' }}" placeholder="São Paulo" class="w-full rounded-xl border px-4 py-3 font-bold mt-1">
+</div>
+<div>
+<label class="text-xs font-bold uppercase text-slate-500">Estado</label>
+<input type="text" name="estado" value="{{ profile_user.estado|default:'' }}" placeholder="SP" maxlength="2" class="w-full rounded-xl border px-4 py-3 font-bold mt-1 uppercase">
+</div>
+</div>
+<div>
+<label class="text-xs font-bold uppercase text-slate-500">Profissão</label>
+<input type="text" name="profissao" value="{{ profile_user.profissao|default:'' }}" placeholder="Veterinário, Engenheiro, Produtor Rural" class="w-full rounded-xl border px-4 py-3 font-bold mt-1">
+</div>
+<div>
+<label class="text-xs font-bold uppercase text-slate-500">Bio</label>
+<textarea name="bio" rows="4" class="w-full rounded-xl border px-4 py-3 mt-1">{{ profile_user.bio|default:"" }}</textarea>
+</div>
+<p class="text-xs text-slate-400">Membro desde {{ profile_user.createdAt|date:"d/m/Y" }} · @{{ profile_user.username }}</p>
+<button type="submit" class="w-full sm:w-auto bg-indigo-600 text-white rounded-2xl px-8 py-4 font-bold hover:bg-indigo-500">Salvar perfil</button>
+</div>
+</form>
+</div>
+
+<form method="post" action="{% url 'web_logout' %}" class="mt-6">
+{% csrf_token %}
+<button type="submit" class="text-rose-600 font-bold text-sm hover:underline">Sair da conta</button>
+</form>
+</div>
+</div>
+{% endblock %}

@@ -1,0 +1,227 @@
+{% extends "api/base.html" %}
+{% block title %}Criar conta — Pet Paparico{% endblock %}
+
+{% block content %}
+<div class="min-h-screen relative flex items-center justify-center overflow-hidden py-12">
+    <div class="absolute inset-0 z-0 bg-cover bg-center"
+         style="background-image: url('https://images.unsplash.com/photo-1583337130417-3346a1be7dee?auto=format&fit=crop&q=80&w=1920');"></div>
+    <div class="absolute inset-0 z-10 bg-gradient-to-br from-indigo-900/95 via-slate-900/90 to-indigo-900/95"></div>
+
+    <div class="relative z-20 w-full max-w-md px-4">
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-white/10 backdrop-blur-md rounded-3xl mb-4 border border-white/20 text-4xl">✨</div>
+            <h1 class="text-4xl font-extrabold text-white mb-2 tracking-tight">
+                PET<span class="text-indigo-400">PAPARICO</span>
+            </h1>
+            <p class="text-slate-300 font-medium">Crie sua conta para começar</p>
+        </div>
+
+        <div class="bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20 shadow-2xl">
+            <form method="post" class="space-y-5">
+                {% csrf_token %}
+                <div class="space-y-2">
+                    <label class="text-sm font-bold text-white/90 uppercase tracking-wider">Username *</label>
+                    <input type="text" name="username" value="{{ username|default:'' }}" required autocomplete="username"
+                           class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-2xl text-white placeholder-white/40 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                </div>
+                <div class="space-y-2">
+                    <label class="text-sm font-bold text-white/90 uppercase tracking-wider">E-mail</label>
+                    <input type="email" name="email" value="{{ email|default:'' }}" autocomplete="email"
+                           class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-2xl text-white placeholder-white/40 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                </div>
+
+                <!-- Dados pessoais -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="space-y-2">
+                        <label class="text-sm font-bold text-white/90 uppercase tracking-wider">CPF</label>
+                        <input type="text" name="cpf" placeholder="XXX.XXX.XXX-XX" value="{{ cpf|default:'' }}" autocomplete="off"
+                               class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-2xl text-white placeholder-white/40 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm font-bold text-white/90 uppercase tracking-wider">Telefone</label>
+                        <input type="tel" name="telefone" placeholder="(11) 99999-9999" value="{{ telefone|default:'' }}" autocomplete="tel"
+                               class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-2xl text-white placeholder-white/40 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm">
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-sm font-bold text-white/90 uppercase tracking-wider">Profissão</label>
+                    <input type="text" name="profissao" placeholder="Ex: Veterinário, Produtor Rural" value="{{ profissao|default:'' }}" autocomplete="off"
+                           class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-2xl text-white placeholder-white/40 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="space-y-2">
+                        <label class="text-sm font-bold text-white/90 uppercase tracking-wider">Cidade</label>
+                        <input type="text" name="cidade" placeholder="São Paulo" value="{{ cidade|default:'' }}" autocomplete="address-level2"
+                               class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-2xl text-white placeholder-white/40 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-sm font-bold text-white/90 uppercase tracking-wider">Estado (UF)</label>
+                        <input type="text" name="estado" placeholder="SP" maxlength="2" value="{{ estado|default:'' }}" autocomplete="address-level1"
+                               class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-2xl text-white placeholder-white/40 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm uppercase">
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <label class="text-sm font-bold text-white/90 uppercase tracking-wider">Senha *</label>
+                    <div class="relative">
+                        <input id="register-password" type="password" name="password" required minlength="6" autocomplete="new-password"
+                               class="w-full px-4 py-3 pr-14 bg-white/10 border border-white/20 rounded-2xl text-white placeholder-white/40 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        <button type="button" id="toggle-register-password" class="absolute inset-y-0 right-3 flex items-center text-white/80 hover:text-white" aria-label="Mostrar senha">
+                            <svg id="register-eye-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <label class="text-sm font-bold text-white/90 uppercase tracking-wider">Confirmar senha *</label>
+                    <div class="relative">
+                        <input id="register-confirm-password" type="password" name="confirm_password" required minlength="6" autocomplete="new-password"
+                               class="w-full px-4 py-3 pr-14 bg-white/10 border border-white/20 rounded-2xl text-white placeholder-white/40 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        <button type="button" id="toggle-register-confirm-password" class="absolute inset-y-0 right-3 flex items-center text-white/80 hover:text-white" aria-label="Mostrar confirmação da senha">
+                            <svg id="register-confirm-eye-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between gap-3">
+                        <label class="text-sm font-bold text-white/90 uppercase tracking-wider">Desafio de segurança</label>
+                        <button type="button" id="refresh-register-captcha" class="rounded-2xl border border-white/15 bg-white/10 px-3 py-2 text-white/90 hover:bg-white/15">
+                            ↻
+                        </button>
+                    </div>
+                    <p class="text-sm text-white/80">Selecione a imagem do <span id="register-captcha-target" class="font-bold text-indigo-200"></span>.</p>
+                    <div id="register-captcha-grid" class="grid grid-cols-2 gap-3"></div>
+                    <input type="hidden" id="register-captcha-answer" value="">
+                    <p id="register-captcha-error" class="hidden text-sm text-rose-300"></p>
+                </div>
+                <button type="submit"
+                        class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-4 rounded-2xl shadow-xl transition-all hover:-translate-y-0.5">
+                    CRIAR CONTA
+                </button>
+            </form>
+            <div class="mt-6 pt-6 border-t border-white/10 text-center text-sm text-white/60">
+                Já tem conta?
+                <a href="{% url 'web_login' %}" class="text-indigo-400 font-bold hover:text-indigo-300">Entrar</a>
+            </div>
+        </div>
+        <div class="text-center mt-6">
+            <a href="{% url 'web_home' %}" class="text-white/60 hover:text-white text-sm font-medium">← Voltar</a>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    const makeToggle = (inputId, buttonId, iconId) => {
+        const input = document.getElementById(inputId);
+        const button = document.getElementById(buttonId);
+        const icon = document.getElementById(iconId);
+
+        if (!input || !button || !icon) return;
+
+        button.addEventListener('click', () => {
+            const isHidden = input.type === 'password';
+            input.type = isHidden ? 'text' : 'password';
+            icon.innerHTML = isHidden
+                ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 19c-7 0-10-7-10-7a18.45 18.45 0 0 1 5.06-5.94"></path><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 10 7 10 7a18.5 18.5 0 0 1-2.16 3.19"></path><path d="M14.12 14.12 9.88 9.88"></path><line x1="1" y1="1" x2="23" y2="23"></line>'
+                : '<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle>';
+        });
+    };
+
+    makeToggle('register-password', 'toggle-register-password', 'register-eye-icon');
+    makeToggle('register-confirm-password', 'toggle-register-confirm-password', 'register-confirm-eye-icon');
+
+    const createCaptchaImage = (emoji, label) => {
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="220" height="180" viewBox="0 0 220 180">
+            <defs>
+                <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#0f766e"/>
+                    <stop offset="100%" stop-color="#0f172a"/>
+                </linearGradient>
+            </defs>
+            <rect width="220" height="180" rx="28" fill="url(#bg)"/>
+            <circle cx="180" cy="32" r="22" fill="rgba(255,255,255,0.12)"/>
+            <circle cx="40" cy="160" r="18" fill="rgba(255,255,255,0.1)"/>
+            <text x="50%" y="48%" text-anchor="middle" font-size="64" font-family="Arial, sans-serif">${emoji}</text>
+            <text x="50%" y="86%" text-anchor="middle" font-size="18" font-family="Arial, sans-serif" fill="#f8fafc">${label}</text>
+        </svg>`;
+        return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+    };
+
+    const captchaOptions = [
+        { id: 'dog', emoji: '🐶', label: 'cachorro', target: 'cachorro' },
+        { id: 'cat', emoji: '🐱', label: 'gato', target: 'gato' },
+        { id: 'rabbit', emoji: '🐰', label: 'coelho', target: 'coelho' },
+        { id: 'frog', emoji: '🐸', label: 'sapo', target: 'sapo' },
+        { id: 'bird', emoji: '🐦', label: 'pássaro', target: 'pássaro' },
+        { id: 'horse', emoji: '🐴', label: 'cavalo', target: 'cavalo' }
+    ];
+
+    const form = document.querySelector('form');
+    const grid = document.getElementById('register-captcha-grid');
+    const targetLabel = document.getElementById('register-captcha-target');
+    const hiddenAnswer = document.getElementById('register-captcha-answer');
+    const errorMessage = document.getElementById('register-captcha-error');
+    const refreshButton = document.getElementById('refresh-register-captcha');
+
+    let currentTarget = null;
+    let selectedOption = null;
+
+    function renderCaptcha() {
+        const shuffled = [...captchaOptions].sort(() => Math.random() - 0.5);
+        const options = shuffled.slice(0, 4);
+        const target = options[Math.floor(Math.random() * options.length)];
+        currentTarget = target;
+        selectedOption = null;
+        hiddenAnswer.value = '';
+        targetLabel.textContent = target.target;
+        errorMessage.classList.add('hidden');
+        errorMessage.textContent = '';
+
+        grid.innerHTML = options.map((option) => `
+            <button type="button"
+                    data-option-id="${option.id}"
+                    class="captcha-option rounded-2xl border border-white/15 bg-white/10 p-3 text-left transition-all hover:border-emerald-200 hover:bg-white/15"
+                    aria-pressed="false">
+                <img src="${createCaptchaImage(option.emoji, option.label)}" alt="${option.label}" class="mx-auto h-24 w-full rounded-xl object-cover bg-slate-950/30">
+                <p class="mt-3 text-center text-sm font-semibold text-white/90">${option.label}</p>
+            </button>
+        `).join('');
+
+        grid.querySelectorAll('.captcha-option').forEach((button) => {
+            button.addEventListener('click', () => {
+                selectedOption = button.dataset.optionId;
+                grid.querySelectorAll('.captcha-option').forEach((other) => {
+                    other.classList.remove('border-emerald-200', 'bg-emerald-100');
+                    other.setAttribute('aria-pressed', 'false');
+                });
+                button.classList.add('border-emerald-200', 'bg-emerald-100');
+                button.setAttribute('aria-pressed', 'true');
+                hiddenAnswer.value = selectedOption;
+                errorMessage.classList.add('hidden');
+                errorMessage.textContent = '';
+            });
+        });
+    }
+
+    if (form && grid && targetLabel && hiddenAnswer && errorMessage && refreshButton) {
+        renderCaptcha();
+        refreshButton.addEventListener('click', renderCaptcha);
+
+        form.addEventListener('submit', (event) => {
+            if (!selectedOption || selectedOption !== currentTarget.id) {
+                event.preventDefault();
+                errorMessage.textContent = 'Selecione a imagem correta para continuar.';
+                errorMessage.classList.remove('hidden');
+            }
+        });
+    }
+})();
+</script>
+{% endblock %}
