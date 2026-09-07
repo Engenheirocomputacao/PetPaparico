@@ -38,7 +38,6 @@ build/
 .pgpass
 
 # User-uploaded and generated application data
-media/
 staticfiles/
 
 # IDE and editor files
