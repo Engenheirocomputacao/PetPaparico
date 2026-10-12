@@ -153,7 +153,7 @@ def feeding_stats(pet, filter_period='all'):
     from django.utils import timezone
     from datetime import timedelta
     
-    now = timezone.now()
+    now = timezone.localtime()
     
     # Filtrar por período
     if filter_period == 'day':
@@ -221,7 +221,10 @@ def feeding_stats(pet, filter_period='all'):
 
 def history_stats(history_qs):
     today = timezone.localdate()
-    today_rows = [h for h in history_qs if h.timestamp.date() == today]
+    today_rows = [
+        h for h in history_qs
+        if timezone.localtime(h.timestamp).date() == today
+    ]
     total_today = sum(h.quantity for h in today_rows)
     avg = 0
     if history_qs:

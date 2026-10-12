@@ -1,4 +1,5 @@
 {% extends "api/base.html" %}
+{% load static %}
 {% block title %}Minha Casa — Pet Paparico{% endblock %}
 
 {% block content %}
@@ -6,7 +7,9 @@
     <div class="border-b border-slate-200 bg-white px-4 py-4 sm:px-8">
         <div class="mx-auto flex max-w-7xl items-center justify-between gap-3">
             <div class="flex items-center gap-2">
-                <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 text-xl shadow-lg shadow-indigo-200">🍪</div>
+                <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 shadow-lg shadow-indigo-200">
+                    <img src="{% static 'api/images/bitten-cookie.svg' %}" alt="Biscoito com uma mordida" class="h-9 w-9 object-contain">
+                </div>
                 <span class="text-xl font-bold">Pet Paparico</span>
             </div>
             <div class="flex items-center gap-4">

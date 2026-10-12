@@ -1,5 +1,5 @@
 import time
-from datetime import timedelta
+from datetime import date, datetime, time, timedelta
 
 from django.contrib import messages
 from django.contrib.auth import authenticate, login as django_login, logout as django_logout
@@ -476,12 +476,29 @@ def feeding_page(request):
 
 
 @login_required(login_url="/login/")
+@require_http_methods(["GET", "POST"])
 def history_page(request):
     pets = get_user_pets(request.user)
-    selected_pet = get_selected_pet(request.user, request.GET.get("pet"))
-    filter_period = request.GET.get("filter", "week")
+    selected_pet = get_selected_pet(
+        request.user,
+        request.GET.get("pet") or request.POST.get("pet_id"),
+    )
+    filter_period = request.GET.get("filter", request.POST.get("filter", "week"))
     if filter_period not in {"day", "week", "month", "year", "all"}:
         filter_period = "week"
+
+    if request.method == "POST" and request.POST.get("action") == "delete_feeding":
+        feeding = get_object_or_404(
+            FeedingHistory,
+            pk=request.POST.get("feeding_id"),
+            pet=selected_pet,
+            pet__user=request.user,
+        )
+        feeding.delete()
+        messages.success(request, "Registro de alimentação excluído.")
+        return redirect(
+            f"{reverse('web_history')}?pet={selected_pet.id}&filter={filter_period}"
+        )
 
     ctx = {
         **nav_context(request),
@@ -495,43 +512,82 @@ def history_page(request):
         page_number = request.GET.get("page")
         history_page = paginator.get_page(page_number)
         
+        history_records = list(history_queryset)
         ctx["history"] = history_page
         ctx["paginator"] = paginator
-        ctx.update(history_stats(list(history_queryset)))
+        ctx.update(history_stats(history_records))
 
         dashboard_stats = feeding_stats(selected_pet, filter_period)
-        feedings_by_day = dashboard_stats.get("feedings_by_day", {})
+        today = timezone.localdate()
+        weekday_labels = ("Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom")
 
         if filter_period == "month":
-            month_start = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-            next_month = month_start.replace(year=month_start.year + (month_start.month // 12), month=month_start.month % 12 + 1)
-            month_end = next_month - timedelta(days=1)
-
-            week_items = []
-            week_start = month_start
-            week_index = 1
-            while week_start <= month_end:
-                week_end = min(week_start + timedelta(days=6), month_end)
-                amount = sum(
-                    h.quantity for h in history_queryset
-                    if week_start.date() <= h.timestamp.date() <= week_end.date()
-                )
-                week_items.append({
-                    "label": f"{week_index}ª semana",
-                    "amount": amount,
-                })
-                week_start = week_end + timedelta(days=1)
-                week_index += 1
-
-            feedings_by_day_percent = week_items
-        else:
+            month_start = today.replace(day=1)
+            next_month = (month_start + timedelta(days=32)).replace(day=1)
+            days_in_month = (next_month - month_start).days
+            week_count = (days_in_month + 6) // 7
             feedings_by_day_percent = [
                 {
-                    "label": day,
-                    "amount": amount,
+                    "label": f"{week * 7 + 1:02d}–{min(week * 7 + 7, days_in_month):02d}",
+                    "amount": 0,
                 }
-                for day, amount in feedings_by_day.items()
+                for week in range(week_count)
             ]
+            for feeding in history_queryset:
+                feeding_date = timezone.localtime(feeding.timestamp).date()
+                if feeding_date.year == today.year and feeding_date.month == today.month:
+                    bucket = (feeding_date.day - 1) // 7
+                    feedings_by_day_percent[bucket]["amount"] += feeding.quantity
+            chart_title = "Consumo por semana"
+            chart_description = "Mês atual · dias do mês"
+        elif filter_period == "day":
+            feedings_by_day_percent = [
+                {"label": f"{hour:02d}h", "amount": 0}
+                for hour in range(0, 24, 2)
+            ]
+            for feeding in history_queryset:
+                local_timestamp = timezone.localtime(feeding.timestamp)
+                if local_timestamp.date() == today:
+                    bucket = local_timestamp.hour // 2
+                    feedings_by_day_percent[bucket]["amount"] += feeding.quantity
+            chart_title = "Consumo por horário"
+            chart_description = "Hoje · faixas de duas horas"
+        elif filter_period == "week":
+            week_start = today - timedelta(days=today.weekday())
+            feedings_by_day_percent = [
+                {
+                    "label": f"{weekday_labels[offset]} {(week_start + timedelta(days=offset)).day:02d}",
+                    "amount": 0,
+                }
+                for offset in range(7)
+            ]
+            for feeding in history_queryset:
+                feeding_date = timezone.localtime(feeding.timestamp).date()
+                offset = (feeding_date - week_start).days
+                if 0 <= offset < 7:
+                    feedings_by_day_percent[offset]["amount"] += feeding.quantity
+            chart_title = "Consumo por dia"
+            chart_description = "Semana atual · segunda a domingo"
+        elif filter_period == "year":
+            month_labels = ("Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez")
+            feedings_by_day_percent = [
+                {"label": month, "amount": 0} for month in month_labels
+            ]
+            for feeding in history_queryset:
+                local_timestamp = timezone.localtime(feeding.timestamp)
+                if local_timestamp.year == today.year:
+                    feedings_by_day_percent[local_timestamp.month - 1]["amount"] += feeding.quantity
+            chart_title = "Consumo por mês"
+            chart_description = f"{today.year} · evolução mensal"
+        else:
+            feedings_by_day_percent = [
+                {"label": day, "amount": 0} for day in weekday_labels
+            ]
+            for feeding in history_queryset:
+                weekday = timezone.localtime(feeding.timestamp).weekday()
+                feedings_by_day_percent[weekday]["amount"] += feeding.quantity
+            chart_title = "Ritmo por dia da semana"
+            chart_description = "Todo o histórico · padrão de consumo"
 
         max_day_total = max(item["amount"] for item in feedings_by_day_percent) if feedings_by_day_percent else 1
         period_color = {
@@ -548,6 +604,35 @@ def history_page(request):
             item["height_pct"] = max(8, min(100, int(amount * 100 / max_day_total))) if amount and max_day_total else 0
             item["bar_color_start"] = selected_colors["start"]
             item["bar_color_end"] = selected_colors["end"]
+
+        local_now = timezone.localtime()
+        period_start = None
+        if filter_period == "day":
+            period_start = local_now.replace(hour=0, minute=0, second=0, microsecond=0)
+        elif filter_period == "week":
+            period_start = (local_now - timedelta(days=local_now.weekday())).replace(
+                hour=0, minute=0, second=0, microsecond=0
+            )
+        elif filter_period == "month":
+            period_start = local_now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        elif filter_period == "year":
+            period_start = local_now.replace(
+                month=1, day=1, hour=0, minute=0, second=0, microsecond=0
+            )
+
+        feedings_by_hour = [0] * 24
+        feeding_type_counts = {"manual": 0, "scheduled": 0}
+        for feeding in history_records:
+            local_timestamp = timezone.localtime(feeding.timestamp)
+            if period_start is not None and local_timestamp < period_start:
+                continue
+            feedings_by_hour[local_timestamp.hour] += feeding.quantity
+            if feeding.feedingType in feeding_type_counts:
+                feeding_type_counts[feeding.feedingType] += 1
+
+        type_count_total = sum(feeding_type_counts.values())
+        manual_percent = round(feeding_type_counts["manual"] * 100 / type_count_total) if type_count_total else 0
+        scheduled_percent = 100 - manual_percent if type_count_total else 0
 
         period_names = {
             "day": "Hoje",
@@ -566,7 +651,14 @@ def history_page(request):
             "last_feeding": dashboard_stats.get("last_feeding"),
             "next_schedule_time": dashboard_stats.get("next_schedule_time", "---"),
             "feedings_by_day_percent": feedings_by_day_percent,
+            "feedings_by_hour": feedings_by_hour,
+            "feeding_type_counts": feeding_type_counts,
+            "feeding_type_total": type_count_total,
+            "manual_percent": manual_percent,
+            "scheduled_percent": scheduled_percent,
             "max_day_total": max_day_total,
+            "chart_title": chart_title,
+            "chart_description": chart_description,
         })
     return render(request, "api/history.html", ctx)
 
@@ -859,6 +951,38 @@ def notifications_page(request):
             n = get_object_or_404(Notification, pk=request.POST.get("notification_id"), user=request.user)
             n.delete()
             messages.success(request, "Notificação excluída.")
+        elif action == "delete_notifications_range":
+            start_value = request.POST.get("start_date", "")
+            end_value = request.POST.get("end_date", "")
+            try:
+                start_date = date.fromisoformat(start_value)
+                end_date = date.fromisoformat(end_value)
+            except ValueError:
+                messages.error(request, "Informe datas válidas para excluir as notificações.")
+                return redirect("web_notifications")
+
+            if end_date < start_date:
+                messages.error(request, "A data final deve ser igual ou posterior à data inicial.")
+                return redirect("web_notifications")
+
+            current_timezone = timezone.get_current_timezone()
+            range_start = timezone.make_aware(
+                datetime.combine(start_date, time.min),
+                current_timezone,
+            )
+            range_end = timezone.make_aware(
+                datetime.combine(end_date + timedelta(days=1), time.min),
+                current_timezone,
+            )
+            deleted_count, _ = Notification.objects.filter(
+                user=request.user,
+                sentAt__gte=range_start,
+                sentAt__lt=range_end,
+            ).delete()
+            messages.success(
+                request,
+                f"{deleted_count} notificação(ões) excluída(s) no período selecionado.",
+            )
         elif action == "test_feeding":
             create_notification(
                 request.user, "feeding_completed",

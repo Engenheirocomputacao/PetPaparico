@@ -82,6 +82,27 @@
 {% endif %}
 </div>
 </div>
+<section class="mb-4 rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50/80 to-white p-4 sm:mb-5 sm:p-5" aria-labelledby="delete-notifications-title">
+<div class="mb-3">
+<h3 id="delete-notifications-title" class="text-sm font-extrabold text-slate-800">Limpar notificações por período</h3>
+<p class="mt-1 text-xs leading-5 text-slate-500">Escolha datas consecutivas para excluir as notificações recebidas entre elas, inclusive.</p>
+</div>
+<form method="post" class="grid min-w-0 gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end" onsubmit="return confirm('Excluir permanentemente as notificações do período selecionado?')">
+{% csrf_token %}
+<input type="hidden" name="action" value="delete_notifications_range">
+<label class="min-w-0 text-xs font-bold text-slate-600">
+Data inicial
+<input type="date" name="start_date" required class="mt-1.5 block w-full min-w-0 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100">
+</label>
+<label class="min-w-0 text-xs font-bold text-slate-600">
+Data final
+<input type="date" name="end_date" required class="mt-1.5 block w-full min-w-0 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold text-slate-700 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100">
+</label>
+<button type="submit" class="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-xs font-extrabold text-white shadow-sm transition hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-300 focus:ring-offset-2">
+<span aria-hidden="true">⌫</span> Excluir período
+</button>
+</form>
+</section>
 <div class="space-y-3 sm:space-y-4">
 {% for n in notifications %}
 {% if n.type == 'dispenser_cleaning' %}

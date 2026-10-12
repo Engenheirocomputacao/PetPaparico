@@ -39,6 +39,7 @@ build/
 
 # User-uploaded and generated application data
 staticfiles/
+server_django/api/management/commands/generate_feeding_history.py
 
 # IDE and editor files
 .vscode/
