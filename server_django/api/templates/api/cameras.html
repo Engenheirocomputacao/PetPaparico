@@ -2,7 +2,7 @@
 {% block title %}Câmeras — Pet Paparico{% endblock %}
 {% block content %}
 <div class="min-h-screen bg-slate-50 p-4 sm:p-6 md:p-8">
-<div class="mx-auto max-w-7xl">
+<div class="mx-auto max-w-screen-2xl">
 <header class="mb-8">
 <div class="flex flex-col sm:flex-row sm:items-center gap-4">
 <div class="flex items-center gap-4">
@@ -33,10 +33,10 @@
 </form>
 </details>
 
-<div class="grid lg:grid-cols-2 gap-6 mb-10">
+<div class="grid grid-cols-1 2xl:grid-cols-2 gap-6 mb-10">
 {% for cam in cameras %}
 <div class="bg-white rounded-[2rem] border border-slate-100 overflow-hidden shadow-sm">
-<div class="aspect-video bg-black relative">
+<div class="relative aspect-video min-h-[280px] bg-black sm:min-h-[360px] 2xl:min-h-0">
 {% if cam.embed_url %}
     {% if "youtube.com/embed" in cam.embed_url or "twitch.tv" in cam.embed_url %}
     <iframe src="{{ cam.embed_url }}?autoplay=1&mute=1" class="w-full h-full" allow="autoplay; encrypted-media" allowfullscreen title="{{ cam.name }}" sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
